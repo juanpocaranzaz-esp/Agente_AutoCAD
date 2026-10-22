@@ -7,7 +7,7 @@ echo =========================================================================
 pushd "%~dp0"
 
 if not exist ".venv\Scripts\python.exe" (
-    echo [1/4] Creando entorno virtual Python (.venv)...
+    echo [1/4] Creando entorno virtual Python .venv...
     python -m venv .venv
 ) else (
     echo [1/4] Entorno virtual .venv ya existe.
