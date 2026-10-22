@@ -24,7 +24,7 @@ raw_json = SPEC_JSON_PATH.read_text(encoding="utf-8")
 data = json.loads(raw_json)
 print("Test 1 Passed: JSON is valid RFC 8259!")
 
-assert data["project_metadata"]["version"] == "1.4.9", "Version must be 1.4.8"
+assert data["project_metadata"]["version"] == "1.4.9", "Version must be 1.4.9"
 assert "lisp-library" in data["directory_tree"], "lisp-library must be in directory_tree"
 
 files_dict = {f["path"]: f["content"] for f in data["files"]}
@@ -794,7 +794,8 @@ print("15.4: CORR-05 (Cross-boundary curve bbox filter) verified!")
 # 15.5 CORR-05b: execute_headless_plot parameter propagation
 assert "window_bbox: Optional[List[float]] = None" in server_code
 assert "execute_headless_plot(" in server_code and "window_bbox=window_bbox" in server_code
-print("15.5: CORR-05b (execute_headless_plot parameter propagation) verified!")
+assert "def mutate_cad_headless(\n    dwg_path: str,\n    lisp_code: Optional[str] = \"\",\n    skill_script: Optional[str] = None,\n    create_backup: bool = True,\n    verify_audit: bool = True,\n    ignore_stale_lock: bool = False,\n    timeout_sec: int = 90,\n    export_plot_path: Optional[str] = None,\n    plot_layout: str = \"Model\",\n    window_bbox: Optional[List[float]] = None," in server_code, "mutate_cad_headless must accept window_bbox"
+print("15.5: CORR-05b (execute_headless_plot parameter propagation in inspect and mutate) verified!")
 
 # 15.6 CORR-06: Idempotent mcp_ucs_pushed in mutate_cad_headless
 assert "mcp_ucs_pushed" in server_code, "CORR-06: mcp_ucs_pushed must be present in server.py"
@@ -805,7 +806,21 @@ assert "v1.4.9" in files_dict["AGENTS.md"] and "draw_primitives_batch" in files_
 assert "v1.4.9" in files_dict["MEMORY.md"], "CORR-07: MEMORY.md must document v1.4.9"
 assert server_code.count("import csv") == 1, "CORR-08: duplicate import csv must be removed"
 assert server_code.count("import json") == 1, "CORR-08: duplicate import json must be removed"
-print("15.7: CORR-07 & CORR-08 (Documentation and import hygiene) verified!")
+
+# 15.8 CORR-09: Installer and setup_local.bat registration robustness
+bat_code = files_dict["setup_local.bat"]
+assert "(?s)\\[mcp_servers\\.autocad_2021\\].*?(?=(\\r?\\n\\[|\\Z))" in bat_code, "setup_local.bat must use singleline end-of-string TOML regex"
+assert "%%APPDATA%%" not in bat_code, "setup_local.bat must not use %%APPDATA%% which causes path corruption in batch"
+assert "appdata = os.environ.get('APPDATA')" in bat_code, "setup_local.bat must resolve APPDATA via os.environ"
+assert "rmdir /s /q" in bat_code, "setup_local.bat must clean up directory fallback"
+
+# Verify TOML regex replacement does not orphan previous keys
+sample_toml = '[mcp_servers.autocad_2021]\ncommand = "old.exe"\nargs = ["old.py"]\n\n[other_tool]\nfoo = "bar"\n'
+new_snip = '[mcp_servers.autocad_2021]\ncommand = "new.exe"\nargs = ["new.py"]\nenv = { A = "1" }\n'
+updated_sample = re.sub(r'(?s)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|\Z))', new_snip.strip(), sample_toml)
+assert 'command = "old.exe"' not in updated_sample, "Old TOML section keys must be completely removed"
+assert '[other_tool]' in updated_sample and 'foo = "bar"' in updated_sample, "Subsequent TOML sections must be preserved"
+print("15.7 & 15.8: CORR-07, CORR-08 & CORR-09 (Documentation, import hygiene, and installer robustness) verified!")
 
 print("\n=======================================================")
 print("ALL V1.4.9 VERIFICATION SUITE TESTS PASSED 100%! ")

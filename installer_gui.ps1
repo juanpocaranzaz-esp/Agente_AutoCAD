@@ -231,7 +231,9 @@ $candidateAcadPaths = @(
     "D:\Program Files\Autodesk\AutoCAD 2021\accoreconsole.exe",
     "D:\Program Files\Autodesk\AutoCAD 2022\accoreconsole.exe",
     "D:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe",
-    "D:\Program Files\Autodesk\AutoCAD 2024\accoreconsole.exe"
+    "D:\Program Files\Autodesk\AutoCAD 2024\accoreconsole.exe",
+    "D:\Program Files\Autodesk\AutoCAD 2025\accoreconsole.exe",
+    "D:\Program Files\Autodesk\AutoCAD 2026\accoreconsole.exe"
 )
 $foundAcad = $null
 foreach ($c in $candidateAcadPaths) {
@@ -378,7 +380,7 @@ $btnInstall.Add_Click({
             $resolvedDst = (Resolve-Path $targetDir -ErrorAction SilentlyContinue)
             $dstPath = if ($resolvedDst) { $resolvedDst.Path } else { $targetDir }
             if ($resolvedSrc -ne $dstPath) {
-                foreach ($item in @(".agents", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore")) {
+                foreach ($item in @(".agents", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore", "README.md", "LICENSE", "run_tests_v1.4.9.py")) {
                     $itemSrc = Join-Path $scriptDir $item
                     if (Test-Path $itemSrc) {
                         Copy-Item -Path $itemSrc -Destination (Join-Path $targetDir $item) -Recurse -Force
@@ -389,16 +391,31 @@ $btnInstall.Add_Click({
             throw "No se encontró el archivo de especificación JSON ni los archivos del servidor en $scriptDir."
         }
 
-        # Asegurar copia de instaladores auxiliares en destino
-        foreach ($aux in @("installer_gui.ps1", "instalar.bat", "unpack_spec.py", "pack_spec.py")) {
+        # Asegurar copia de instaladores auxiliares, documentación y pruebas en destino
+        foreach ($aux in @("installer_gui.ps1", "instalar.bat", "unpack_spec.py", "pack_spec.py", "README.md", "LICENSE", "run_tests_v1.4.9.py")) {
             $auxSrc = Join-Path $scriptDir $aux
             if (Test-Path $auxSrc) {
                 $auxDst = Join-Path $targetDir $aux
-                if ((Resolve-Path $auxSrc -ErrorAction SilentlyContinue).Path -ne (Resolve-Path $auxDst -ErrorAction SilentlyContinue).Path) {
+                $srcFull = [System.IO.Path]::GetFullPath($auxSrc)
+                $dstFull = [System.IO.Path]::GetFullPath($auxDst)
+                if ($srcFull -ne $dstFull) {
                     Copy-Item -Path $auxSrc -Destination $auxDst -Force
                 }
             }
         }
+        if ($sourceJson) {
+            $specDst = Join-Path $targetDir (Split-Path $sourceJson -Leaf)
+            $srcFull = [System.IO.Path]::GetFullPath($sourceJson)
+            $dstFull = [System.IO.Path]::GetFullPath($specDst)
+            if ($srcFull -ne $dstFull) {
+                Copy-Item -Path $sourceJson -Destination $specDst -Force
+            }
+        }
+
+        # Asegurar existencia de carpetas operativas esenciales
+        New-Item -ItemType Directory -Path (Join-Path $targetDir "mcp-autocad\temp") -Force | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $targetDir "mcp-autocad\logs") -Force | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $targetDir "lisp-library") -Force | Out-Null
 
         $progressBar.Value = 35
         $lblStatusBottom.Text = "[2/5] Creando entorno virtual de Python (.venv)..."
@@ -406,9 +423,17 @@ $btnInstall.Add_Click({
 
         $venvPy = Join-Path $targetDir ".venv\Scripts\python.exe"
         if (-not (Test-Path $venvPy)) {
-            $p0 = Start-Process -FilePath "python" -ArgumentList "-m venv `"$targetDir\.venv`"" -Wait -NoNewWindow -PassThru
-            if ($p0.ExitCode -ne 0 -or -not (Test-Path $venvPy)) {
-                Start-Process -FilePath "py" -ArgumentList "-m venv `"$targetDir\.venv`"" -Wait -NoNewWindow -PassThru
+            $created = $false
+            try {
+                $p0 = Start-Process -FilePath "python" -ArgumentList "-m venv `"$targetDir\.venv`"" -Wait -NoNewWindow -PassThru -ErrorAction Stop
+                if ($p0.ExitCode -eq 0 -and (Test-Path $venvPy)) { $created = $true }
+            } catch {}
+
+            if (-not $created) {
+                try {
+                    $p1 = Start-Process -FilePath "py" -ArgumentList "-m venv `"$targetDir\.venv`"" -Wait -NoNewWindow -PassThru -ErrorAction Stop
+                    if ($p1.ExitCode -eq 0 -and (Test-Path $venvPy)) { $created = $true }
+                } catch {}
             }
         }
         if (-not (Test-Path $venvPy)) {
@@ -442,8 +467,13 @@ $btnInstall.Add_Click({
                 $skTarget = $_.FullName
                 if ($chkAntigravity.Checked) {
                     $gLink = Join-Path $geminiSkills $skName
-                    if (Test-Path $gLink) {
-                        cmd /c "rmdir `"$gLink`"" 2>$null
+                    $gItem = Get-Item -LiteralPath $gLink -ErrorAction SilentlyContinue
+                    if ($gItem) {
+                        if ($gItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+                            cmd /c "rmdir `"$gLink`"" 2>$null
+                        } else {
+                            Remove-Item -LiteralPath $gLink -Recurse -Force -ErrorAction SilentlyContinue
+                        }
                     }
                     cmd /c "mklink /J `"$gLink`" `"$skTarget`"" 2>$null
                     if (-not (Test-Path $gLink)) {
@@ -452,8 +482,13 @@ $btnInstall.Add_Click({
                 }
                 if ($chkCodex.Checked) {
                     $cLink = Join-Path $codexSkills $skName
-                    if (Test-Path $cLink) {
-                        cmd /c "rmdir `"$cLink`"" 2>$null
+                    $cItem = Get-Item -LiteralPath $cLink -ErrorAction SilentlyContinue
+                    if ($cItem) {
+                        if ($cItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+                            cmd /c "rmdir `"$cLink`"" 2>$null
+                        } else {
+                            Remove-Item -LiteralPath $cLink -Recurse -Force -ErrorAction SilentlyContinue
+                        }
                     }
                     cmd /c "mklink /J `"$cLink`" `"$skTarget`"" 2>$null
                     if (-not (Test-Path $cLink)) {
@@ -498,8 +533,12 @@ $btnInstall.Add_Click({
             if (-not $cfg) {
                 $cfg = [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} }
             }
-            if (-not $cfg.psobject.properties['mcpServers']) {
-                $cfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
+            if (-not $cfg.psobject.properties['mcpServers'] -or $null -eq $cfg.mcpServers) {
+                if ($cfg.psobject.properties['mcpServers']) {
+                    $cfg.mcpServers = [PSCustomObject]@{}
+                } else {
+                    $cfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
+                }
             }
             if ($cfg.mcpServers.psobject.properties['autocad-2021']) {
                 $cfg.mcpServers.'autocad-2021' = $srvEntry
@@ -531,8 +570,8 @@ $btnInstall.Add_Click({
             $tomlSnippet += $tomlEnv
 
             $existingToml = if (Test-Path $codexTomlPath) { [System.IO.File]::ReadAllText($codexTomlPath) } else { "" }
-            if ($existingToml -match '(?ms)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|$))') {
-                $updatedToml = [regex]::Replace($existingToml, '(?ms)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|$))', [System.Text.RegularExpressions.MatchEvaluator]{ $tomlSnippet.Trim() })
+            if ($existingToml -match '(?s)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|\z))') {
+                $updatedToml = [regex]::Replace($existingToml, '(?s)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|\z))', [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $tomlSnippet.Trim() })
             } else {
                 $updatedToml = $existingToml + $tomlSnippet
             }
@@ -557,8 +596,12 @@ $btnInstall.Add_Click({
                 if (-not $cCfg) {
                     $cCfg = [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} }
                 }
-                if (-not $cCfg.psobject.properties['mcpServers']) {
-                    $cCfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
+                if (-not $cCfg.psobject.properties['mcpServers'] -or $null -eq $cCfg.mcpServers) {
+                    if ($cCfg.psobject.properties['mcpServers']) {
+                        $cCfg.mcpServers = [PSCustomObject]@{}
+                    } else {
+                        $cCfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
+                    }
                 }
                 if ($cCfg.mcpServers.psobject.properties['autocad-2021']) {
                     $cCfg.mcpServers.'autocad-2021' = $srvEntry

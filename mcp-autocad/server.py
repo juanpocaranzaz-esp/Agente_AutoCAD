@@ -3021,6 +3021,7 @@ def mutate_cad_headless(
     timeout_sec: int = 90,
     export_plot_path: Optional[str] = None,
     plot_layout: str = "Model",
+    window_bbox: Optional[List[float]] = None,
 ) -> Dict[str, Any]:
     """
     PRIMARY WRITE TOOL. Executes AutoLISP on a closed .dwg file using accoreconsole.exe.
@@ -3202,6 +3203,7 @@ def mutate_cad_headless(
                 export_plot_path=export_plot_path,
                 layout_name=plot_layout,
                 timeout_sec=timeout_sec,
+                window_bbox=window_bbox,
             )
         return mut_res
     except subprocess.TimeoutExpired:
@@ -3613,6 +3615,7 @@ def draw_primitives_batch(
     timeout_sec: int = 90,
     export_plot_path: Optional[str] = None,
     plot_layout: str = "Model",
+    window_bbox: Optional[List[float]] = None,
 ) -> Dict[str, Any]:
     """
     Executes a batch of parametric drawing primitives (line, lwpolyline, circle, rectangle, arc, insert_block)
@@ -3639,6 +3642,7 @@ def draw_primitives_batch(
         timeout_sec=timeout_sec,
         export_plot_path=export_plot_path,
         plot_layout=plot_layout,
+        window_bbox=window_bbox,
     )
     if res.get("status") == "ok":
         tail = res.get("console_tail", "")
