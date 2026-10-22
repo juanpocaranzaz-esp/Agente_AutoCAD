@@ -2972,6 +2972,7 @@ def inspect_cad_headless(
                     export_plot_path=export_plot_path,
                     layout_name=plot_layout,
                     timeout_sec=timeout_sec,
+                    window_bbox=bbox,
                 )
 
             logging.info(f"Inspected {target_dwg.name} in {elapsed}s (blocked={blocked})")

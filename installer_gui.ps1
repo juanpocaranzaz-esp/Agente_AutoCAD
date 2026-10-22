@@ -103,14 +103,17 @@ $script:CheckPathSafety = {
     $p = & $script:GetSelectedInstallPath
     if ([string]::IsNullOrWhiteSpace($p)) {
         $lblPathWarning.Text = "Aviso: Debes especificar una ruta válida."
+        $lblPathWarning.ForeColor = [System.Drawing.Color]::Firebrick
         return $false
     }
     if ($p.ToLower().Contains("cad proyect")) {
         $lblPathWarning.Text = "Aviso: La ruta contiene 'cad proyect' (se activará modo staging de desarrollo)."
+        $lblPathWarning.ForeColor = [System.Drawing.Color]::DarkOrange
         return $true
     }
     if ($p.Contains(" ")) {
         $lblPathWarning.Text = "Aviso: La ruta contiene espacios. Se recomienda 'C:\AgenteCAD' para AutoCAD."
+        $lblPathWarning.ForeColor = [System.Drawing.Color]::DarkOrange
         return $true
     }
     $lblPathWarning.Text = "Ruta limpia y válida."
@@ -342,32 +345,59 @@ $btnInstall.Add_Click({
     $form.Refresh()
 
     try {
-        # 1. Localizar archivo JSON maestro de especificacion
+        # 1. Localizar archivo JSON maestro de especificacion o directorio fuente
+        $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+        if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+
         $sourceJson = $null
-        $candJsons = Get-ChildItem -Path $PSScriptRoot -Filter "especificacion_del_agente_y_mcp_autocad_2021-V*.json" | Sort-Object Name -Descending
+        $candJsons = Get-ChildItem -Path $scriptDir -Filter "especificacion_del_agente_y_mcp_autocad_2021-V*.json" | Sort-Object Name -Descending
         if ($candJsons.Count -gt 0) {
             $sourceJson = $candJsons[0].FullName
         }
-        if (-not $sourceJson) {
-            throw "No se encontró el archivo de especificación JSON en $PSScriptRoot."
-        }
 
-        # 2. Desempaquetar archivos en la carpeta destino
+        # 2. Desempaquetar o copiar archivos a la carpeta destino
         New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-        $rawJson = Get-Content -Path $sourceJson -Raw -Encoding UTF8 | ConvertFrom-Json
-        
-        foreach ($d in $rawJson.directory_tree) {
-            $dPath = Join-Path $targetDir $d
-            New-Item -ItemType Directory -Path $dPath -Force | Out-Null
+
+        if ($sourceJson) {
+            $rawJson = Get-Content -Path $sourceJson -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($d in $rawJson.directory_tree) {
+                $dPath = Join-Path $targetDir $d
+                New-Item -ItemType Directory -Path $dPath -Force | Out-Null
+            }
+            foreach ($f in $rawJson.files) {
+                $rel = $f.path
+                $cnt = $f.content
+                $outPath = Join-Path $targetDir $rel
+                $outDir = Split-Path $outPath -Parent
+                if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir -Force | Out-Null }
+                [System.IO.File]::WriteAllText($outPath, $cnt, [System.Text.UTF8Encoding]::new($false))
+            }
+        } elseif (Test-Path (Join-Path $scriptDir "mcp-autocad\server.py")) {
+            # Modo repositorio crudo / directorio fuente
+            $resolvedSrc = (Resolve-Path $scriptDir).Path
+            $resolvedDst = (Resolve-Path $targetDir -ErrorAction SilentlyContinue)
+            $dstPath = if ($resolvedDst) { $resolvedDst.Path } else { $targetDir }
+            if ($resolvedSrc -ne $dstPath) {
+                foreach ($item in @(".agents", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore")) {
+                    $itemSrc = Join-Path $scriptDir $item
+                    if (Test-Path $itemSrc) {
+                        Copy-Item -Path $itemSrc -Destination (Join-Path $targetDir $item) -Recurse -Force
+                    }
+                }
+            }
+        } else {
+            throw "No se encontró el archivo de especificación JSON ni los archivos del servidor en $scriptDir."
         }
 
-        foreach ($f in $rawJson.files) {
-            $rel = $f.path
-            $cnt = $f.content
-            $outPath = Join-Path $targetDir $rel
-            $outDir = Split-Path $outPath -Parent
-            if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir -Force | Out-Null }
-            [System.IO.File]::WriteAllText($outPath, $cnt, [System.Text.UTF8Encoding]::new($false))
+        # Asegurar copia de instaladores auxiliares en destino
+        foreach ($aux in @("installer_gui.ps1", "instalar.bat", "unpack_spec.py", "pack_spec.py")) {
+            $auxSrc = Join-Path $scriptDir $aux
+            if (Test-Path $auxSrc) {
+                $auxDst = Join-Path $targetDir $aux
+                if ((Resolve-Path $auxSrc -ErrorAction SilentlyContinue).Path -ne (Resolve-Path $auxDst -ErrorAction SilentlyContinue).Path) {
+                    Copy-Item -Path $auxSrc -Destination $auxDst -Force
+                }
+            }
         }
 
         $progressBar.Value = 35
@@ -376,7 +406,10 @@ $btnInstall.Add_Click({
 
         $venvPy = Join-Path $targetDir ".venv\Scripts\python.exe"
         if (-not (Test-Path $venvPy)) {
-            Start-Process -FilePath "python" -ArgumentList "-m venv `"$targetDir\.venv`"" -Wait -NoNewWindow
+            $p0 = Start-Process -FilePath "python" -ArgumentList "-m venv `"$targetDir\.venv`"" -Wait -NoNewWindow -PassThru
+            if ($p0.ExitCode -ne 0 -or -not (Test-Path $venvPy)) {
+                Start-Process -FilePath "py" -ArgumentList "-m venv `"$targetDir\.venv`"" -Wait -NoNewWindow -PassThru
+            }
         }
         if (-not (Test-Path $venvPy)) {
             throw "No se pudo crear el entorno virtual. Verifica que Python esté instalado y en el PATH del sistema."
@@ -388,8 +421,7 @@ $btnInstall.Add_Click({
 
         $pipExe = Join-Path $targetDir ".venv\Scripts\pip.exe"
         $reqFile = Join-Path $targetDir "requirements.txt"
-        $p1 = Start-Process -FilePath $pipExe -ArgumentList "install --upgrade pip" -Wait -NoNewWindow -PassThru
-        if ($p1.ExitCode -ne 0) { throw "Error al actualizar pip en .venv." }
+        Start-Process -FilePath $pipExe -ArgumentList "install --upgrade pip" -Wait -NoNewWindow
         $p2 = Start-Process -FilePath $pipExe -ArgumentList "install -r `"$reqFile`"" -Wait -NoNewWindow -PassThru
         if ($p2.ExitCode -ne 0) { throw "Error al instalar librerías de requirements.txt." }
 
@@ -414,6 +446,9 @@ $btnInstall.Add_Click({
                         cmd /c "rmdir `"$gLink`"" 2>$null
                     }
                     cmd /c "mklink /J `"$gLink`" `"$skTarget`"" 2>$null
+                    if (-not (Test-Path $gLink)) {
+                        Copy-Item -Path $skTarget -Destination $gLink -Recurse -Force
+                    }
                 }
                 if ($chkCodex.Checked) {
                     $cLink = Join-Path $codexSkills $skName
@@ -421,6 +456,9 @@ $btnInstall.Add_Click({
                         cmd /c "rmdir `"$cLink`"" 2>$null
                     }
                     cmd /c "mklink /J `"$cLink`" `"$skTarget`"" 2>$null
+                    if (-not (Test-Path $cLink)) {
+                        Copy-Item -Path $skTarget -Destination $cLink -Recurse -Force
+                    }
                 }
             }
         }
@@ -448,7 +486,18 @@ $btnInstall.Add_Click({
             $mcpJsonPath = Join-Path $env:USERPROFILE ".gemini\config\mcp_config.json"
             $mcpDir = Split-Path $mcpJsonPath -Parent
             if (-not (Test-Path $mcpDir)) { New-Item -ItemType Directory -Path $mcpDir -Force | Out-Null }
-            $cfg = if (Test-Path $mcpJsonPath) { Get-Content $mcpJsonPath -Raw | ConvertFrom-Json } else { [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} } }
+            $cfg = $null
+            if (Test-Path $mcpJsonPath) {
+                try {
+                    $rawContent = Get-Content $mcpJsonPath -Raw
+                    if (-not [string]::IsNullOrWhiteSpace($rawContent)) {
+                        $cfg = $rawContent | ConvertFrom-Json
+                    }
+                } catch {}
+            }
+            if (-not $cfg) {
+                $cfg = [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} }
+            }
             if (-not $cfg.psobject.properties['mcpServers']) {
                 $cfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
             }
@@ -483,7 +532,7 @@ $btnInstall.Add_Click({
 
             $existingToml = if (Test-Path $codexTomlPath) { [System.IO.File]::ReadAllText($codexTomlPath) } else { "" }
             if ($existingToml -match '(?ms)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|$))') {
-                $updatedToml = $existingToml -replace '(?ms)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|$))', $tomlSnippet.Trim()
+                $updatedToml = [regex]::Replace($existingToml, '(?ms)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|$))', [System.Text.RegularExpressions.MatchEvaluator]{ $tomlSnippet.Trim() })
             } else {
                 $updatedToml = $existingToml + $tomlSnippet
             }
@@ -496,7 +545,18 @@ $btnInstall.Add_Click({
             $claudeDir = Split-Path $claudeJsonPath -Parent
             if (Test-Path (Split-Path $claudeDir -Parent)) {
                 New-Item -ItemType Directory -Path $claudeDir -Force | Out-Null
-                $cCfg = if (Test-Path $claudeJsonPath) { Get-Content $claudeJsonPath -Raw | ConvertFrom-Json } else { [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} } }
+                $cCfg = $null
+                if (Test-Path $claudeJsonPath) {
+                    try {
+                        $rawClaude = Get-Content $claudeJsonPath -Raw
+                        if (-not [string]::IsNullOrWhiteSpace($rawClaude)) {
+                            $cCfg = $rawClaude | ConvertFrom-Json
+                        }
+                    } catch {}
+                }
+                if (-not $cCfg) {
+                    $cCfg = [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} }
+                }
                 if (-not $cCfg.psobject.properties['mcpServers']) {
                     $cCfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
                 }
