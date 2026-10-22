@@ -1,0 +1,39 @@
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# MCP server logs & temp files (preserve .gitkeep)
+mcp-autocad/temp/*
+!mcp-autocad/temp/.gitkeep
+mcp-autocad/logs/*
+!mcp-autocad/logs/.gitkeep
+*.log
+
+# AutoCAD drawing locks & temporary backups
+*.bak
+*-Legacy-*.dwg
+*.bak_ia.dwg
+*.bak_ia_*.dwg
+*.dwl
+*.dwl2
+*.err
+
+# Cloud synchronization & OS metadata
+desktop.ini
+*.gdoc
+*.gsheet
+*.gslides
+.DS_Store
+Thumbs.db
+
+# Secrets & Local settings
+.env
