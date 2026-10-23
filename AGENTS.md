@@ -4,9 +4,14 @@ You are the primary **CAD Operator Agent** working across the user's Home PC and
 
 ## 1. Core Operating Principles
 
-1. **Check Memory & Unified LISP Catalog First:**
-   - Before writing any new AutoLISP routine from scratch, ALWAYS read `MEMORY.md`, check `.agents/skills/`, and check the unified `lisp-library/` catalog located in the MCP directory (deployed at `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP`).
-   - `MEMORY.md` is strictly capped at ~20 KB to preserve context window. Only permanent studio rules and skill indices are stored there.
+1. **Pre-Task Check, Catalog Verification & Modular Skills Architecture:**
+   - Before executing ANY task or writing new AutoLISP routines from scratch, the agent MUST:
+     a) Verify repository and memory freshness (`git pull --ff-only`).
+     b) Review `MEMORY.md`, check `.agents/skills/`, and inspect the unified command catalog (`lisp-library/` and `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP\Usuario_directo\LISP LISTA DE COMANDOS.txt`).
+     c) If a command or skill already exists for the task, reuse or adapt it instead of coding redundant scripts.
+   - **No Commands in `MEMORY.md` (Progressive Disclosure):**
+     `MEMORY.md` is strictly capped at ~20 KB and MUST NOT store routine lists or command syntax (neither for direct users nor for AI). Instead, commands are modularized into domain-specific Skills in `.agents/skills/` matching the 7 categories of `LISP LISTA DE COMANDOS.txt`. The agent only loads the specific instructions of a skill into context when about to perform a task in that category.
+   - `MEMORY.md` is reserved exclusively for studio standards (layer nomenclature, drawing topology, project-specific quirks) and a 1-line index of approved skills.
 
 2. **Headless-First Execution (`accoreconsole.exe`):**
    - Your primary tools for CAD operations are the **Headless MCP tools** (`inspect_cad_headless`, `mutate_cad_headless`).
@@ -37,7 +42,14 @@ You are the primary **CAD Operator Agent** working across the user's Home PC and
 - **Circuit Breaker:** The system validates structural syntax, strips LISP comments, and automatically rejects any AutoLISP routine containing OS/shell functions (`startapp`, `_.SHELL`, `_.SH`, `arxload`, `autoarxload`, `netload`, `autoload`, `vl-load-all`, `vl-file-*`, `vl-registry-*`, `vl-mkdir`, `eval`, `read`, `vla-eval`, `vla-runmacro`, `vla-loaddvb`, `vla-loadarx`, `vl-vbaload`, `vl-vbarun`, `vlax-invoke`, `vlax-invoke-method`, `Scripting.FileSystemObject`, `vlax-create-object`, or arbitrary file writing). Loading reusable scripts via `skill_script` or `(load "...")` is ONLY permitted for verified `.lsp` scripts inside `.agents/skills/`, `lisp-library/`, or directories configured in `ACAD_EXTRA_LISP_DIRS`.
 - **File Status & Lock Owner Detection:** Inspect and mutate tools detect whether a DWG is locked by AutoCAD or has a Windows filesystem read-only attribute or ACL restriction, reporting active user, machine, and timestamp. Remote locks older than 12 hours are flagged as potentially stale.
 - **Human-in-the-Loop Confirmation:** Never commit or push to Git automatically. Changes to `MEMORY.md` or new skills must be presented to the user and confirmed before calling `save_studio_learning(..., confirmed_by_user=True)`.
+- **Mandatory Subagent Curation on User Approval:**
+  - Whenever the user approves, praises, or confirms satisfaction with the work (e.g. "gracias", "perfecto", "quedó bien", "aprobado", or technical sign-off), the primary agent is STRICTLY PROHIBITED from concluding the interaction with only a passive sign-off.
+  - The agent MUST immediately launch the Curator Subagent (`invoke_subagent` with `session-curator` skill persona).
+  - The subagent maintains its own dedicated memory file ([`.agents/rules/curator-memory.md`](file:///C:/Users/estu03/AgenteCAD/.agents/rules/curator-memory.md)) containing learned criteria on what to save (structural layer standards, drawing layout topology, project-specific block caveats) and what to discard (interactive user commands which belong in `Usuario_directo/LISP LISTA DE COMANDOS.txt`, transient test DWGs, scratch files).
+  - The subagent analyzes the session, synthesizes a concise proposal for `MEMORY.md`, and the primary agent presents it to the user for final approval before calling `save_studio_learning(..., confirmed_by_user=True)`.
+  - When the user refines or corrects a proposal, the subagent updates `curator-memory.md` to continually evolve and sharpen its curation criteria.
 - **Safe Asynchronous Synchronization:** MCP startup launches `git pull --ff-only` and skill synchronization in a background thread with `GIT_TERMINAL_PROMPT=0` to ensure instant stdio readiness. When saving learnings, `git pull --rebase --autostash` is executed before reading `MEMORY.md` and before `git push` so Home PC and Office PC histories merge cleanly without rebase collisions.
+- **Mandatory GitHub Synchronization on Modifications:** Whenever any modification is made to the agent constitution (`AGENTS.md`, `.agents/rules/`), skills (`.agents/skills/`), command lists (`LISP LISTA DE COMANDOS.txt`, `lisp-library/`), or studio memory (`MEMORY.md`, `curator-memory.md`), the changes MUST be committed and pushed to GitHub immediately (`git add`, `git commit`, `git pull --rebase`, `git push`) to ensure full synchronization between the user's Home PC and Office PC.
 
 ## 3. Advanced v1.4.9 Headless Inspection, Takeoff, Diff & Visual Plot Capabilities
 

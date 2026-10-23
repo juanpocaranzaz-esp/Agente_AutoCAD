@@ -26,6 +26,8 @@ mcp-autocad/logs/*
 *.dwl
 *.dwl2
 *.err
+tests/**/*.dwg
+tests/**/*.bak
 
 # Cloud synchronization & OS metadata
 desktop.ini

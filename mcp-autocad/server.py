@@ -842,9 +842,12 @@ def _resolve_and_verify_skill_load_path(raw_target: str) -> Path:
     if not candidate.is_absolute():
         found = None
         for root in allowed_roots:
-            cand = (root / candidate).resolve()
-            if cand.exists():
-                found = cand
+            for sub_cand in [candidate, Path("Agente") / candidate, Path("agente") / candidate]:
+                cand = (root / sub_cand).resolve()
+                if cand.exists():
+                    found = cand
+                    break
+            if found:
                 break
         if not found:
             if (AGENTE_ROOT / candidate).exists():
@@ -975,9 +978,12 @@ def resolve_skill_script_code(skill_script: Optional[str]) -> str:
     if not candidate.is_absolute():
         found = None
         for root in allowed_roots:
-            cand = (root / candidate).resolve()
-            if cand.exists():
-                found = cand
+            for sub_cand in [candidate, Path("Agente") / candidate, Path("agente") / candidate]:
+                cand = (root / sub_cand).resolve()
+                if cand.exists():
+                    found = cand
+                    break
+            if found:
                 break
         if not found:
             if (AGENTE_ROOT / candidate).exists():
