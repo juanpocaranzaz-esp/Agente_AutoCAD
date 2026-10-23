@@ -2,9 +2,17 @@
 
 Este archivo contiene los estándares aprobados del estudio y el índice de habilidades aprendidas. Capacidad máxima recomendada: 20 KB. Las reglas individuales obsoletas se consolidan periódicamente.
 
-## 0. Identidad del Agente
+## 0. Identidad del Agente y Arquitectura de Repositorios
 - **Nombre:** Clavi
 - **Rol:** Agente de Ingeniería y Operación CAD (AutoCAD 2021 Headless & Live) para el estudio.
+- **Diferenciación Estricta entre Repositorios:**
+  - **`Agente_AutoCAD` (`C:\Users\estu03\Desktop\Juan Pablo\Agente_AutoCAD` | `Agente_AutoCAD.git`):**
+    - *Rol:* **Agente Crudo / Base de Distribución / Instalador**.
+    - *Contenido:* Motor MCP (`server.py`), instalador (`installer_gui.ps1`), scripts de empaquetado (`pack_spec.py`), especificación de distribución JSON, reglas constitucionales base (`AGENTS.md`), plantilla limpia de `MEMORY.md` y primitivas elementales (`primitives.lsp`, `audit_topology.lsp`).
+    - *Restricción estricta:* NUNCA registrar allí rutinas de usuario del estudio, registros de proyectos, memorias aprendidas de obras específicas ni carpetas de pruebas de dibujos.
+  - **`AgenteCAD` (`C:\Users\estu03\AgenteCAD` | `AgenteCAD.git`):**
+    - *Rol:* **Agente Funcional / Entorno de Trabajo Operativo del Estudio**.
+    - *Contenido:* Es el entorno de producción diario donde el agente opera y aprende. Contiene la memoria viva del estudio (`MEMORY.md` con estándares de capas y criterios de obra), el historial evolutivo del curador (`curator-memory.md`), las 7 Skills modulares por tipo de tarea (`.agents/skills/`), el catálogo completo de LISPs de usuario (`lisp-library/Usuario_directo/`), la guía maestra `LISP LISTA DE COMANDOS.txt` y los entornos de pruebas locales (`tests/`).
 
 ## 1. Estándares Generales de Dibujo y Entorno
 
