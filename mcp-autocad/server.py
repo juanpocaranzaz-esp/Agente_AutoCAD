@@ -838,18 +838,25 @@ def _resolve_and_verify_skill_load_path(raw_target: str) -> Path:
     if candidate.suffix == "":
         candidate = candidate.with_suffix(".lsp")
 
+    allowed_roots = get_allowed_lisp_roots()
     if not candidate.is_absolute():
-        if not (AGENTE_ROOT / candidate).exists() and (LISP_LIB_ROOT / candidate).exists():
-            candidate = (LISP_LIB_ROOT / candidate).resolve()
-        elif (SKILLS_ROOT / candidate).exists():
-            candidate = (SKILLS_ROOT / candidate).resolve()
-        else:
-            slug = re.sub(r"[^a-z0-9-]+", "-", candidate.stem.lower()).strip("-")
-            skill_script_candidate = SKILLS_ROOT / slug / "scripts" / f"{slug}.lsp"
-            if skill_script_candidate.exists():
-                candidate = skill_script_candidate.resolve()
+        found = None
+        for root in allowed_roots:
+            cand = (root / candidate).resolve()
+            if cand.exists():
+                found = cand
+                break
+        if not found:
+            if (AGENTE_ROOT / candidate).exists():
+                found = (AGENTE_ROOT / candidate).resolve()
             else:
-                candidate = (AGENTE_ROOT / candidate).resolve()
+                slug = re.sub(r"[^a-z0-9-]+", "-", candidate.stem.lower()).strip("-")
+                skill_script_candidate = SKILLS_ROOT / slug / "scripts" / f"{slug}.lsp"
+                if skill_script_candidate.exists():
+                    found = skill_script_candidate.resolve()
+                else:
+                    found = (AGENTE_ROOT / candidate).resolve()
+        candidate = found
     else:
         candidate = candidate.resolve()
 
@@ -863,7 +870,6 @@ def _resolve_and_verify_skill_load_path(raw_target: str) -> Path:
             f"Security circuit breaker: LISP file '{candidate}' does not exist."
         )
 
-    allowed_roots = get_allowed_lisp_roots()
     is_allowed = False
     for root in allowed_roots:
         try:
@@ -957,40 +963,51 @@ def normalize_skill_loads(lisp_code: str) -> str:
 
 def resolve_skill_script_code(skill_script: Optional[str]) -> str:
     """
-    Safely loads an approved skill .lsp script from SKILLS_ROOT or LISP_LIB_ROOT by slug or relative path,
+    Safely loads an approved skill .lsp script from SKILLS_ROOT, LISP_LIB_ROOT, or ACAD_EXTRA_LISP_DIRS by slug or relative path,
     preventing arbitrary filesystem traversal while allowing execution without hitting the (load) blocker.
     """
     if not skill_script:
         return ""
     candidate = Path(skill_script)
+    if candidate.suffix == "":
+        candidate = candidate.with_suffix(".lsp")
+    allowed_roots = get_allowed_lisp_roots()
     if not candidate.is_absolute():
-        # Check direct existence in LISP_LIB_ROOT, SKILLS_ROOT or AGENTE_ROOT
-        if (LISP_LIB_ROOT / candidate).exists():
-            candidate = (LISP_LIB_ROOT / candidate).resolve()
-        elif (SKILLS_ROOT / candidate).exists():
-            candidate = (SKILLS_ROOT / candidate).resolve()
-        elif (AGENTE_ROOT / candidate).exists():
-            candidate = (AGENTE_ROOT / candidate).resolve()
-        else:
-            slug = re.sub(r"[^a-z0-9-]+", "-", candidate.stem.lower()).strip("-")
-            scripts_dir = SKILLS_ROOT / slug / "scripts"
-            candidate_file = scripts_dir / f"{slug}.lsp"
-            if not candidate_file.exists() and scripts_dir.is_dir():
-                lsp_files = sorted(scripts_dir.glob("*.lsp"))
-                if len(lsp_files) == 1:
-                    candidate_file = lsp_files[0]
-            if not candidate_file.exists():
-                lib_candidate = LISP_LIB_ROOT / f"{slug}.lsp"
-                if lib_candidate.exists():
-                    candidate_file = lib_candidate
-            if candidate_file.exists():
-                candidate = candidate_file.resolve()
+        found = None
+        for root in allowed_roots:
+            cand = (root / candidate).resolve()
+            if cand.exists():
+                found = cand
+                break
+        if not found:
+            if (AGENTE_ROOT / candidate).exists():
+                found = (AGENTE_ROOT / candidate).resolve()
             else:
-                candidate = (AGENTE_ROOT / candidate).resolve()
+                raw_stem = candidate.stem
+                slug = re.sub(r"[^a-z0-9-]+", "-", raw_stem.lower()).strip("-")
+                scripts_dir = SKILLS_ROOT / slug / "scripts"
+                candidate_file = scripts_dir / f"{slug}.lsp"
+                if not candidate_file.exists() and scripts_dir.is_dir():
+                    lsp_files = sorted(scripts_dir.glob("*.lsp"))
+                    if len(lsp_files) == 1:
+                        candidate_file = lsp_files[0]
+                if not candidate_file.exists():
+                    for root in allowed_roots:
+                        for cand_name in [f"{raw_stem}.lsp", f"{slug}.lsp", candidate.name]:
+                            lib_candidate = root / cand_name
+                            if lib_candidate.exists():
+                                candidate_file = lib_candidate
+                                break
+                        if candidate_file.exists():
+                            break
+                if candidate_file.exists():
+                    found = candidate_file.resolve()
+                else:
+                    found = (AGENTE_ROOT / candidate).resolve()
+        candidate = found
     else:
         candidate = candidate.resolve()
 
-    allowed_roots = get_allowed_lisp_roots()
     is_allowed = False
     for root in allowed_roots:
         try:

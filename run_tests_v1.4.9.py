@@ -339,6 +339,27 @@ candidate_path = _resolve_and_verify_skill_load_path("SUMLP.lsp")
 assert candidate_path.exists(), "SUMLP.lsp must resolve inside lisp-library"
 print(f"6.17: Resolved library routine (load 'SUMLP.lsp') -> {candidate_path}")
 
+# Test 6.17c: Load path resolution from ACAD_EXTRA_LISP_DIRS (network studio library)
+extra_test_dir = test_root / "network_lisp_lib"
+extra_test_dir.mkdir(parents=True, exist_ok=True)
+(extra_test_dir / "NET_TOOL.lsp").write_text("(defun c:NET_TOOL () (princ \"net\"))", encoding="utf-8")
+old_extra = os.environ.get("ACAD_EXTRA_LISP_DIRS", "")
+try:
+    os.environ["ACAD_EXTRA_LISP_DIRS"] = str(extra_test_dir)
+    cand_extra = _resolve_and_verify_skill_load_path("NET_TOOL")
+    assert cand_extra.exists(), "NET_TOOL must resolve inside ACAD_EXTRA_LISP_DIRS"
+    assert cand_extra == (extra_test_dir / "NET_TOOL.lsp").resolve()
+    code_extra = namespace["resolve_skill_script_code"]("NET_TOOL")
+    assert "c:NET_TOOL" in code_extra, "resolve_skill_script_code must resolve from ACAD_EXTRA_LISP_DIRS"
+    norm_extra = namespace["normalize_skill_loads"]('(load "NET_TOOL.lsp")')
+    assert (extra_test_dir / "NET_TOOL.lsp").resolve().as_posix() in norm_extra
+    print(f"6.17c: Resolved external network library routine from ACAD_EXTRA_LISP_DIRS -> {cand_extra}")
+finally:
+    if old_extra:
+        os.environ["ACAD_EXTRA_LISP_DIRS"] = old_extra
+    else:
+        os.environ.pop("ACAD_EXTRA_LISP_DIRS", None)
+
 try:
     _resolve_and_verify_skill_load_path("../../evil.lsp")
     assert False, "Should fail on path traversal"
