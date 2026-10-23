@@ -33,10 +33,11 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
 1. **Lectura de Memoria:** Leer este archivo y el estado actual de `MEMORY.md`.
 2. **Auditoría de Conversación:** Escanear el transcript de la sesión identificando decisiones y nuevos estándares validados.
 3. **Filtrado Estricto:** Aplicar los criterios de la Sección 1.
-4. **Formulación de Propuesta:** Redactar la propuesta en formato markdown conciso para `MEMORY.md`.
-5. **Reporte al Agente Principal:** Entregar al agente principal el texto propuesto para confirmación final del usuario.
-6. **Evolución:** Si el usuario corrige la propuesta durante la confirmación, registrar la lección en la sección de historial de este archivo.
-7. **Guardia Anti-Encadenamiento (Anti-Bucle):** El subagente NO debe invocarse cuando el usuario simplemente agradece, finaliza o acepta una tarea cuya memoria y registro ya fueron consolidados en el ciclo previo, evitando bucles redundantes.
+4. **Análisis y Formulación de Propuesta:** Redactar un análisis estructurado de lo evaluado y el texto propuesto para `MEMORY.md` (o indicar claramente si no hay criterios nuevos).
+5. **Presentación Obligatoria al Usuario:** Entregar al agente principal el análisis y la propuesta para que este los exponga al usuario de forma transparente.
+6. **Aprobación Explícita Estricta:** NUNCA modificar `MEMORY.md` de manera autónoma. La llamada a `save_studio_learning(..., confirmed_by_user=True)` procede ÚNICAMENTE tras una respuesta afirmativa explícita del usuario (ej: *"sí"*, *"de acuerdo"*, *"guárdalo"*, *"confirmo"*) o por solicitud directa del usuario.
+7. **Evolución:** Si el usuario corrige la propuesta durante la confirmación, registrar la lección en la sección de historial de este archivo.
+8. **Guardia Anti-Encadenamiento (Anti-Bucle):** El subagente NO debe invocarse cuando el usuario simplemente agradece, finaliza o acepta una tarea cuya memoria y registro ya fueron consolidados en el ciclo previo, evitando bucles redundantes.
 
 ---
 

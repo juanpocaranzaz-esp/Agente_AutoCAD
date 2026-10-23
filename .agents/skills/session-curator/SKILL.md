@@ -22,7 +22,14 @@ Este skill define el rol y procedimiento del **Subagente Curador de Memoria**.
 3. **Filtrado Estricto de Criterios:**
    - **Guardar:** Estándares de capas, topología de modelos, organización de planos, excepciones de obra (redactadas con precisión como casos específicos, no generalizados), invariantes de AutoCAD.
    - **Descartar:** Comandos interactivos de `Usuario_directo` (van exclusivamente a `LISP LISTA DE COMANDOS.txt`), archivos temporales de testeo, rutas locales efímeras.
-4. **Elaboración de Propuesta:** Redactar el texto exacto propuesto para incorporar bajo `## 2. Criterios Aprobados del Estudio` en `MEMORY.md`.
-5. **Entrega al Agente Principal:** Enviar el texto propuesto al agente principal para que este solicite la confirmación del usuario.
-6. **Actualización de la Memoria del Curador:** Si el usuario aprueba con ajustes o correcciones de criterio, registrar esa nueva lección en la sección de historial de `curator-memory.md`.
-7. **Consolidación:** Con la confirmación del usuario, ejecutar `save_studio_learning(..., confirmed_by_user=True)`.
+4. **Elaboración de Análisis y Propuesta:** Redactar siempre un análisis estructurado de la sesión que distinga:
+   - Temas técnicos abordados en la sesión.
+   - Criterios o estándares identificados como candidatos para `MEMORY.md`.
+   - Elementos descartados (comandos de usuario, datos de prueba).
+   - Texto exacto propuesto a incorporar en `MEMORY.md` (o dictamen de que no hay criterios nuevos por agregar).
+5. **Presentación Transparente al Usuario:** Entregar el análisis y la propuesta al agente principal para que este los exponga directamente al usuario.
+6. **Aplicación Estrictamente Condicional (Aprobación Humana Explícita):**
+   - **PROHIBIDO** aplicar cambios a `MEMORY.md` de forma autónoma.
+   - **SOLO** se ejecuta `save_studio_learning(..., confirmed_by_user=True)` si el usuario responde aceptando explícitamente la propuesta (ej. *"sí"*, *"correcto"*, *"guárdalo"*, *"aprobado"*) o si el usuario pide directamente que se guarde.
+   - Si el usuario no responde afirmativamente, pide ajustes o rechaza la propuesta, `MEMORY.md` no se modifica.
+7. **Actualización de la Memoria del Curador:** Si el usuario aprueba con ajustes o corrige criterios de curaduría, registrar la lección en la sección de historial de `curator-memory.md`.
