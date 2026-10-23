@@ -26,6 +26,7 @@ print("Test 1 Passed: JSON is valid RFC 8259!")
 
 assert data["project_metadata"]["version"] == "1.4.9", "Version must be 1.4.9"
 assert "lisp-library" in data["directory_tree"], "lisp-library must be in directory_tree"
+assert "docs" in data["directory_tree"], "docs must be in directory_tree"
 
 files_dict = {f["path"]: f["content"] for f in data["files"]}
 assert "mcp-autocad/server.py" in files_dict, "server.py missing"
@@ -37,6 +38,7 @@ assert ".agents/rules/autocad-invariants.md" in files_dict, "autocad-invariants.
 assert ".agents/rules/reglas-entorno-desarrollo.md" not in files_dict, "reglas-entorno-desarrollo.md must be excluded from production spec package"
 assert "lisp-library/primitives.lsp" in files_dict, "primitives.lsp missing"
 assert "lisp-library/audit_topology.lsp" in files_dict, "audit_topology.lsp missing"
+assert "docs/estabilidad_com.md" in files_dict, "docs/estabilidad_com.md missing"
 for rel_path, json_content in files_dict.items():
     disk_path = SPEC_JSON_PATH.parent / rel_path
     assert disk_path.exists(), f"Scaffolded file missing on disk: {disk_path}"
@@ -821,6 +823,13 @@ updated_sample = re.sub(r'(?s)\[mcp_servers\.autocad_2021\].*?(?=(\r?\n\[|\Z))',
 assert 'command = "old.exe"' not in updated_sample, "Old TOML section keys must be completely removed"
 assert '[other_tool]' in updated_sample and 'foo = "bar"' in updated_sample, "Subsequent TOML sections must be preserved"
 print("15.7 & 15.8: CORR-07, CORR-08 & CORR-09 (Documentation, import hygiene, and installer robustness) verified!")
+
+# 15.9 CORR-10: execute_cad_live GUI connection & installer docs inclusion
+assert "acad = _get_acad_gui_app(create_if_missing=False)" in server_code, "execute_cad_live must use _get_acad_gui_app"
+installer_code = Path(BASE_DIR / "installer_gui.ps1").read_text(encoding="utf-8")
+assert '"docs"' in installer_code, "installer_gui.ps1 must include docs directory"
+assert 'New-Item -ItemType Directory -Path (Join-Path $targetDir "docs")' in installer_code, "installer_gui.ps1 must create docs directory"
+print("15.9: CORR-10 (execute_cad_live helper usage & installer docs inclusion) verified!")
 
 print("\n=======================================================")
 print("ALL V1.4.9 VERIFICATION SUITE TESTS PASSED 100%! ")

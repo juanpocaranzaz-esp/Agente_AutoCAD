@@ -58,7 +58,7 @@ setup_local.bat
 
 ---
 
-## 🔧 Catálogo de Herramientas MCP (13 Herramientas)
+## 🔧 Catálogo de Herramientas MCP (16 Herramientas)
 
 | Herramienta | Modo | Descripción |
 |---|---|---|
@@ -72,7 +72,10 @@ setup_local.bat
 | `draw_arc` | Headless | Dibuja un arco circular por centro, radio y ángulos en grados. |
 | `insert_block_param` | Headless | Inserta una referencia de bloque con escala XYZ, rotación y atributos. |
 | `audit_drawing_topology` | Headless | Audita y repara la topología del dibujo (extremos sueltos, empalmes en T, vértices cercanos, duplicados colineales y polilíneas abiertas). |
-| `capture_drawing_preview`| Headless | Genera una vista previa visual de alta resolución en PNG renderizada mediante vectorización PDF. |
+| `capture_drawing_preview`| Headless/Live | Genera una vista previa visual de alta resolución en PNG renderizada mediante vectorización PDF o captura de ventana en vivo. |
+| `open_drawing_gui` | GUI (Live) | Abre un plano DWG en la interfaz visible de AutoCAD 2021 o activa su ventana si ya estaba abierto (STA COM thread-safe). |
+| `list_open_drawings_gui` | GUI (Live) | Lista todos los dibujos actualmente abiertos en la interfaz de AutoCAD reportando ruta, pestaña activa y cambios pendientes. |
+| `close_drawing_gui` | GUI (Live) | Cierra un dibujo abierto en AutoCAD GUI (activo o por nombre) con opción de guardar cambios (`save=True/False`). |
 | `execute_cad_live` | GUI (Live) | Ejecuta comandos o LISP en la sesión activa de AutoCAD abierta por el usuario, preservando la selección actual (`Pickfirst`). |
 | `save_studio_learning` | MCP | Curaduría y registro de nuevos aprendizajes y rutinas LISP estandarizadas del estudio. |
 

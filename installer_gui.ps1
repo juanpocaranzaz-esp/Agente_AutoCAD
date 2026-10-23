@@ -380,7 +380,7 @@ $btnInstall.Add_Click({
             $resolvedDst = (Resolve-Path $targetDir -ErrorAction SilentlyContinue)
             $dstPath = if ($resolvedDst) { $resolvedDst.Path } else { $targetDir }
             if ($resolvedSrc -ne $dstPath) {
-                foreach ($item in @(".agents", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore", "README.md", "LICENSE", "run_tests_v1.4.9.py")) {
+                foreach ($item in @(".agents", "docs", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore", "README.md", "LICENSE", "run_tests_v1.4.9.py")) {
                     $itemSrc = Join-Path $scriptDir $item
                     if (Test-Path $itemSrc) {
                         Copy-Item -Path $itemSrc -Destination (Join-Path $targetDir $item) -Recurse -Force
@@ -392,14 +392,14 @@ $btnInstall.Add_Click({
         }
 
         # Asegurar copia de instaladores auxiliares, documentación y pruebas en destino
-        foreach ($aux in @("installer_gui.ps1", "instalar.bat", "unpack_spec.py", "pack_spec.py", "README.md", "LICENSE", "run_tests_v1.4.9.py")) {
+        foreach ($aux in @("installer_gui.ps1", "instalar.bat", "unpack_spec.py", "pack_spec.py", "README.md", "LICENSE", "run_tests_v1.4.9.py", "docs")) {
             $auxSrc = Join-Path $scriptDir $aux
             if (Test-Path $auxSrc) {
                 $auxDst = Join-Path $targetDir $aux
                 $srcFull = [System.IO.Path]::GetFullPath($auxSrc)
                 $dstFull = [System.IO.Path]::GetFullPath($auxDst)
                 if ($srcFull -ne $dstFull) {
-                    Copy-Item -Path $auxSrc -Destination $auxDst -Force
+                    Copy-Item -Path $auxSrc -Destination $auxDst -Recurse -Force
                 }
             }
         }
@@ -416,6 +416,7 @@ $btnInstall.Add_Click({
         New-Item -ItemType Directory -Path (Join-Path $targetDir "mcp-autocad\temp") -Force | Out-Null
         New-Item -ItemType Directory -Path (Join-Path $targetDir "mcp-autocad\logs") -Force | Out-Null
         New-Item -ItemType Directory -Path (Join-Path $targetDir "lisp-library") -Force | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $targetDir "docs") -Force | Out-Null
 
         $progressBar.Value = 35
         $lblStatusBottom.Text = "[2/5] Creando entorno virtual de Python (.venv)..."
@@ -516,37 +517,43 @@ $btnInstall.Add_Click({
             $srvEntry.env["ACAD_EXTRA_LISP_DIRS"] = $lispNetwork
         }
 
-        # 1. Antigravity
+        # 1. Antigravity (Sincronizacion multiruta para Antigravity)
         if ($chkAntigravity.Checked) {
-            $mcpJsonPath = Join-Path $env:USERPROFILE ".gemini\config\mcp_config.json"
-            $mcpDir = Split-Path $mcpJsonPath -Parent
-            if (-not (Test-Path $mcpDir)) { New-Item -ItemType Directory -Path $mcpDir -Force | Out-Null }
-            $cfg = $null
-            if (Test-Path $mcpJsonPath) {
-                try {
-                    $rawContent = Get-Content $mcpJsonPath -Raw
-                    if (-not [string]::IsNullOrWhiteSpace($rawContent)) {
-                        $cfg = $rawContent | ConvertFrom-Json
-                    }
-                } catch {}
-            }
-            if (-not $cfg) {
-                $cfg = [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} }
-            }
-            if (-not $cfg.psobject.properties['mcpServers'] -or $null -eq $cfg.mcpServers) {
-                if ($cfg.psobject.properties['mcpServers']) {
-                    $cfg.mcpServers = [PSCustomObject]@{}
-                } else {
-                    $cfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
+            $mcpTargetPaths = @(
+                (Join-Path $env:USERPROFILE ".gemini\config\mcp_config.json"),
+                (Join-Path $env:USERPROFILE ".gemini\antigravity\mcp_config.json"),
+                (Join-Path $env:USERPROFILE ".gemini\antigravity-ide\mcp_config.json")
+            )
+            foreach ($mcpJsonPath in $mcpTargetPaths) {
+                $mcpDir = Split-Path $mcpJsonPath -Parent
+                if (-not (Test-Path $mcpDir)) { New-Item -ItemType Directory -Path $mcpDir -Force | Out-Null }
+                $cfg = $null
+                if (Test-Path $mcpJsonPath) {
+                    try {
+                        $rawContent = Get-Content $mcpJsonPath -Raw
+                        if (-not [string]::IsNullOrWhiteSpace($rawContent)) {
+                            $cfg = $rawContent | ConvertFrom-Json
+                        }
+                    } catch {}
                 }
+                if (-not $cfg) {
+                    $cfg = [PSCustomObject]@{ "mcpServers" = [PSCustomObject]@{} }
+                }
+                if (-not $cfg.psobject.properties['mcpServers'] -or $null -eq $cfg.mcpServers) {
+                    if ($cfg.psobject.properties['mcpServers']) {
+                        $cfg.mcpServers = [PSCustomObject]@{}
+                    } else {
+                        $cfg | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value ([PSCustomObject]@{}) -Force
+                    }
+                }
+                if ($cfg.mcpServers.psobject.properties['autocad-2021']) {
+                    $cfg.mcpServers.'autocad-2021' = $srvEntry
+                } else {
+                    $cfg.mcpServers | Add-Member -MemberType NoteProperty -Name 'autocad-2021' -Value $srvEntry -Force
+                }
+                $cfgJson = $cfg | ConvertTo-Json -Depth 10
+                [System.IO.File]::WriteAllText($mcpJsonPath, $cfgJson, [System.Text.UTF8Encoding]::new($false))
             }
-            if ($cfg.mcpServers.psobject.properties['autocad-2021']) {
-                $cfg.mcpServers.'autocad-2021' = $srvEntry
-            } else {
-                $cfg.mcpServers | Add-Member -MemberType NoteProperty -Name 'autocad-2021' -Value $srvEntry -Force
-            }
-            $cfgJson = $cfg | ConvertTo-Json -Depth 10
-            [System.IO.File]::WriteAllText($mcpJsonPath, $cfgJson, [System.Text.UTF8Encoding]::new($false))
         }
 
         # 2. Codex

@@ -18,11 +18,32 @@ def pack() -> None:
 
     data["project_metadata"]["version"] = "1.4.9"
 
+    # Ensure docs directory is in directory_tree
+    if "directory_tree" in data:
+        if "docs" not in data["directory_tree"]:
+            data["directory_tree"].append("docs")
+    else:
+        data["directory_tree"] = ["docs"]
+
     # Exclude development staging only rule from production package
     files = [
         f for f in data["files"]
         if not f["path"].endswith("reglas-entorno-desarrollo.md")
     ]
+
+    # Ensure files from docs directory are included
+    existing_paths = {f["path"].replace("\\", "/") for f in files}
+    docs_dir = base_dir / "docs"
+    if docs_dir.exists() and docs_dir.is_dir():
+        for doc_file in sorted(docs_dir.glob("**/*")):
+            if doc_file.is_file():
+                rel_posix = doc_file.relative_to(base_dir).as_posix()
+                if rel_posix not in existing_paths:
+                    files.append({
+                        "path": rel_posix,
+                        "content": ""
+                    })
+                    existing_paths.add(rel_posix)
 
     for f in files:
         rel_path = f["path"]

@@ -1463,8 +1463,32 @@ def _background_git_pull():
 
 
 # ============================================================================
-# COM Helpers for Secondary Live Mode
+# COM Helpers for Secondary Live Mode (STA Thread-Safe with Concurrency Lock)
 # ============================================================================
+COM_THREAD_LOCK = threading.Lock()
+
+
+def _get_acad_gui_app(create_if_missing: bool = False) -> Any:
+    """Gets the active AutoCAD GUI instance via COM, or optionally creates a new visible instance."""
+    try:
+        return win32com.client.GetActiveObject(ACAD_PROG_ID)
+    except Exception:
+        pass
+    try:
+        return win32com.client.GetActiveObject(ACAD_GENERIC_PROG_ID)
+    except Exception:
+        pass
+    if create_if_missing:
+        try:
+            acad = win32com.client.Dispatch(ACAD_PROG_ID)
+        except Exception:
+            acad = win32com.client.Dispatch(ACAD_GENERIC_PROG_ID)
+        try:
+            acad.Visible = True
+        except Exception:
+            pass
+        return acad
+    raise RuntimeError("AutoCAD GUI application is not currently running.")
 def _is_com_call_rejected(exc: Exception) -> bool:
     """Checks whether the exception represents RPC_E_CALL_REJECTED (-2147418111 / 0x80010001)."""
     hresult = getattr(exc, "hresult", None)
@@ -3259,18 +3283,24 @@ def execute_cad_live(
     except Exception as script_err:
         return {"status": "error", "message": str(script_err)}
 
+    COM_THREAD_LOCK.acquire()
     pythoncom.CoInitialize()
     try:
         try:
-            try:
-                acad = win32com.client.GetActiveObject(ACAD_PROG_ID)
-            except Exception:
-                acad = win32com.client.GetActiveObject(ACAD_GENERIC_PROG_ID)
-            doc = acad.ActiveDocument
+            acad = _get_acad_gui_app(create_if_missing=False)
         except Exception as exc:
             if _is_com_call_rejected(exc):
                 raise
             return {"status": "error", "message": f"Could not attach to AutoCAD GUI: {exc}"}
+
+        try:
+            doc = acad.ActiveDocument
+            if not doc:
+                return {"status": "error", "message": "No active document found in AutoCAD GUI."}
+        except Exception as act_err:
+            if _is_com_call_rejected(act_err):
+                raise
+            return {"status": "error", "message": f"No active document found in AutoCAD GUI: {act_err}"}
 
         result: Dict[str, Any] = {
             "status": "ok",
@@ -3424,7 +3454,233 @@ def execute_cad_live(
 
         return result
     finally:
-        pythoncom.CoUninitialize()
+        try:
+            pythoncom.CoUninitialize()
+        finally:
+            COM_THREAD_LOCK.release()
+
+# ============================================================================
+# Tool 3b: Open Drawing in Live AutoCAD GUI
+# ============================================================================
+@mcp.tool()
+@com_retry(max_attempts=5, delay=0.5)
+def open_drawing_gui(
+    dwg_path: str,
+    activate_if_open: bool = True,
+    create_instance_if_closed: bool = True,
+) -> Dict[str, Any]:
+    """
+    Opens a DWG file in the visible AutoCAD 2021 GUI window so the user can inspect or edit it interactively.
+    If the drawing is already open, activates its window without duplicating it.
+    Thread-safe and protected by STA COM locks.
+    """
+    target = Path(dwg_path).resolve()
+    if not target.exists():
+        return {"status": "error", "message": f"Drawing file not found: {target}"}
+    if not target.is_file() or target.suffix.lower() not in (".dwg", ".dxf"):
+        return {"status": "error", "message": f"Target must be a .dwg or .dxf file: {target}"}
+
+    COM_THREAD_LOCK.acquire()
+    pythoncom.CoInitialize()
+    try:
+        try:
+            acad = _get_acad_gui_app(create_if_missing=create_instance_if_closed)
+        except Exception as exc:
+            if _is_com_call_rejected(exc):
+                raise
+            return {"status": "error", "message": f"Could not connect to AutoCAD GUI: {exc}"}
+
+        abs_target_str = str(target)
+        abs_target_lower = abs_target_str.lower()
+
+        try:
+            doc_count = acad.Documents.Count
+        except Exception as c_err:
+            if _is_com_call_rejected(c_err):
+                raise
+            doc_count = 0
+
+        for i in range(doc_count):
+            try:
+                d = acad.Documents.Item(i)
+                if d.FullName.lower() == abs_target_lower:
+                    if activate_if_open:
+                        d.Activate()
+                    return {
+                        "status": "ok",
+                        "action": "activated" if activate_if_open else "already_open",
+                        "drawing_name": d.Name,
+                        "full_path": d.FullName,
+                        "was_already_open": True,
+                    }
+            except Exception as d_exc:
+                if _is_com_call_rejected(d_exc):
+                    raise
+                continue
+
+        try:
+            doc = acad.Documents.Open(abs_target_str)
+            return {
+                "status": "ok",
+                "action": "opened",
+                "drawing_name": doc.Name,
+                "full_path": doc.FullName,
+                "was_already_open": False,
+            }
+        except Exception as o_err:
+            if _is_com_call_rejected(o_err):
+                raise
+            return {"status": "error", "message": f"Failed to open drawing in AutoCAD GUI: {o_err}"}
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        finally:
+            COM_THREAD_LOCK.release()
+
+
+# ============================================================================
+# Tool 3c: List Open Drawings in Live AutoCAD GUI
+# ============================================================================
+@mcp.tool()
+@com_retry(max_attempts=5, delay=0.5)
+def list_open_drawings_gui() -> Dict[str, Any]:
+    """
+    Lists all DWG documents currently open in the active AutoCAD 2021 GUI instance.
+    Reports document name, full path, saved status, and whether it is the active window.
+    """
+    COM_THREAD_LOCK.acquire()
+    pythoncom.CoInitialize()
+    try:
+        try:
+            acad = _get_acad_gui_app(create_if_missing=False)
+        except Exception:
+            return {
+                "status": "ok",
+                "autocad_running": False,
+                "count": 0,
+                "open_drawings": [],
+                "message": "AutoCAD GUI is not currently running.",
+            }
+
+        docs_list = []
+        active_name = None
+        try:
+            active_doc = getattr(acad, "ActiveDocument", None)
+            if active_doc:
+                active_name = getattr(active_doc, "Name", None)
+        except Exception:
+            pass
+
+        try:
+            count = acad.Documents.Count
+        except Exception as cnt_err:
+            if _is_com_call_rejected(cnt_err):
+                raise
+            count = 0
+
+        for i in range(count):
+            try:
+                d = acad.Documents.Item(i)
+                d_name = getattr(d, "Name", "")
+                d_path = getattr(d, "FullName", "")
+                d_saved = getattr(d, "Saved", True)
+                docs_list.append({
+                    "name": d_name,
+                    "full_path": d_path,
+                    "saved": bool(d_saved),
+                    "is_active": (d_name == active_name),
+                })
+            except Exception as itm_err:
+                if _is_com_call_rejected(itm_err):
+                    raise
+                docs_list.append({"error": str(itm_err)})
+
+        return {
+            "status": "ok",
+            "autocad_running": True,
+            "count": len(docs_list),
+            "active_drawing": active_name,
+            "open_drawings": docs_list,
+        }
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        finally:
+            COM_THREAD_LOCK.release()
+
+
+# ============================================================================
+# Tool 3d: Close Drawing in Live AutoCAD GUI
+# ============================================================================
+@mcp.tool()
+@com_retry(max_attempts=5, delay=0.5)
+def close_drawing_gui(
+    dwg_name: Optional[str] = None,
+    save: bool = True,
+) -> Dict[str, Any]:
+    """
+    Closes a drawing in the active AutoCAD 2021 GUI window.
+    If dwg_name is omitted, closes the currently active document.
+    Allows specifying whether to save changes (save=True) before closing.
+    """
+    COM_THREAD_LOCK.acquire()
+    pythoncom.CoInitialize()
+    try:
+        try:
+            acad = _get_acad_gui_app(create_if_missing=False)
+        except Exception:
+            return {"status": "error", "message": "AutoCAD GUI is not currently running."}
+
+        target_doc = None
+        if not dwg_name:
+            try:
+                target_doc = acad.ActiveDocument
+            except Exception as act_err:
+                if _is_com_call_rejected(act_err):
+                    raise
+                return {"status": "error", "message": f"No active document found in AutoCAD GUI: {act_err}"}
+        else:
+            lookup = dwg_name.strip().lower()
+            try:
+                count = acad.Documents.Count
+            except Exception as cnt_err:
+                if _is_com_call_rejected(cnt_err):
+                    raise
+                count = 0
+
+            for i in range(count):
+                try:
+                    d = acad.Documents.Item(i)
+                    if d.Name.lower() == lookup or d.FullName.lower() == lookup:
+                        target_doc = d
+                        break
+                except Exception as itm_err:
+                    if _is_com_call_rejected(itm_err):
+                        raise
+                    continue
+
+        if not target_doc:
+            return {"status": "error", "message": f"Document '{dwg_name}' not found among open AutoCAD GUI documents."}
+
+        closed_name = getattr(target_doc, "Name", "Unknown")
+        try:
+            target_doc.Close(save)
+            save_msg = "saved" if save else "without saving"
+            return {
+                "status": "ok",
+                "closed_drawing": closed_name,
+                "saved": save,
+                "message": f"Document '{closed_name}' closed successfully ({save_msg}).",
+            }
+        except Exception as cls_err:
+            if _is_com_call_rejected(cls_err):
+                raise
+            return {"status": "error", "message": f"Failed to close document '{closed_name}': {cls_err}"}
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        finally:
+            COM_THREAD_LOCK.release()
 
 
 # ============================================================================
