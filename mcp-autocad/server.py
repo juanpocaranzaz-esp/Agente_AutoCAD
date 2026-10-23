@@ -1468,27 +1468,6 @@ def _background_git_pull():
 COM_THREAD_LOCK = threading.Lock()
 
 
-def _get_acad_gui_app(create_if_missing: bool = False) -> Any:
-    """Gets the active AutoCAD GUI instance via COM, or optionally creates a new visible instance."""
-    try:
-        return win32com.client.GetActiveObject(ACAD_PROG_ID)
-    except Exception:
-        pass
-    try:
-        return win32com.client.GetActiveObject(ACAD_GENERIC_PROG_ID)
-    except Exception:
-        pass
-    if create_if_missing:
-        try:
-            acad = win32com.client.Dispatch(ACAD_PROG_ID)
-        except Exception:
-            acad = win32com.client.Dispatch(ACAD_GENERIC_PROG_ID)
-        try:
-            acad.Visible = True
-        except Exception:
-            pass
-        return acad
-    raise RuntimeError("AutoCAD GUI application is not currently running.")
 def _is_com_call_rejected(exc: Exception) -> bool:
     """Checks whether the exception represents RPC_E_CALL_REJECTED (-2147418111 / 0x80010001)."""
     hresult = getattr(exc, "hresult", None)
@@ -1498,6 +1477,33 @@ def _is_com_call_rejected(exc: Exception) -> bool:
     if args and isinstance(args[0], int) and args[0] in (-2147418111, 0x80010001):
         return True
     return False
+
+
+def _get_acad_gui_app(create_if_missing: bool = False) -> Any:
+    """Gets the active AutoCAD GUI instance via COM, or optionally creates a new visible instance."""
+    try:
+        return win32com.client.GetActiveObject(ACAD_PROG_ID)
+    except Exception as exc:
+        if _is_com_call_rejected(exc):
+            raise
+    try:
+        return win32com.client.GetActiveObject(ACAD_GENERIC_PROG_ID)
+    except Exception as exc:
+        if _is_com_call_rejected(exc):
+            raise
+    if create_if_missing:
+        try:
+            acad = win32com.client.Dispatch(ACAD_PROG_ID)
+        except Exception as exc:
+            if _is_com_call_rejected(exc):
+                raise
+            acad = win32com.client.Dispatch(ACAD_GENERIC_PROG_ID)
+        try:
+            acad.Visible = True
+        except Exception:
+            pass
+        return acad
+    raise RuntimeError("AutoCAD GUI application is not currently running.")
 
 
 def com_retry(max_attempts: int = 5, delay: float = 0.5):
@@ -3553,7 +3559,9 @@ def list_open_drawings_gui() -> Dict[str, Any]:
     try:
         try:
             acad = _get_acad_gui_app(create_if_missing=False)
-        except Exception:
+        except Exception as exc:
+            if _is_com_call_rejected(exc):
+                raise
             return {
                 "status": "ok",
                 "autocad_running": False,
@@ -3628,8 +3636,10 @@ def close_drawing_gui(
     try:
         try:
             acad = _get_acad_gui_app(create_if_missing=False)
-        except Exception:
-            return {"status": "error", "message": "AutoCAD GUI is not currently running."}
+        except Exception as exc:
+            if _is_com_call_rejected(exc):
+                raise
+            return {"status": "error", "message": f"Could not attach to AutoCAD GUI: {exc}"}
 
         target_doc = None
         if not dwg_name:

@@ -829,7 +829,10 @@ assert "acad = _get_acad_gui_app(create_if_missing=False)" in server_code, "exec
 installer_code = Path(BASE_DIR / "installer_gui.ps1").read_text(encoding="utf-8")
 assert '"docs"' in installer_code, "installer_gui.ps1 must include docs directory"
 assert 'New-Item -ItemType Directory -Path (Join-Path $targetDir "docs")' in installer_code, "installer_gui.ps1 must create docs directory"
-print("15.9: CORR-10 (execute_cad_live helper usage & installer docs inclusion) verified!")
+assert 'if not exist "docs" mkdir "docs"' in bat_code, "setup_local.bat must create docs directory"
+assert 'Test-Path -Path $auxSrc -PathType Container' in installer_code, "installer_gui.ps1 must check for container before copying aux items"
+assert 'Join-Path $auxSrc "*"' in installer_code, "installer_gui.ps1 must copy children with wildcard to prevent nested folder duplication"
+print("15.9: CORR-10 (execute_cad_live helper usage, container copy guards & installer docs inclusion) verified!")
 
 print("\n=======================================================")
 print("ALL V1.4.9 VERIFICATION SUITE TESTS PASSED 100%! ")

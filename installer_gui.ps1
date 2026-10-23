@@ -383,7 +383,13 @@ $btnInstall.Add_Click({
                 foreach ($item in @(".agents", "docs", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore", "README.md", "LICENSE", "run_tests_v1.4.9.py")) {
                     $itemSrc = Join-Path $scriptDir $item
                     if (Test-Path $itemSrc) {
-                        Copy-Item -Path $itemSrc -Destination (Join-Path $targetDir $item) -Recurse -Force
+                        $itemDst = Join-Path $targetDir $item
+                        if (Test-Path -Path $itemSrc -PathType Container) {
+                            New-Item -ItemType Directory -Path $itemDst -Force | Out-Null
+                            Copy-Item -Path (Join-Path $itemSrc "*") -Destination $itemDst -Recurse -Force
+                        } else {
+                            Copy-Item -Path $itemSrc -Destination $itemDst -Force
+                        }
                     }
                 }
             }
@@ -399,7 +405,12 @@ $btnInstall.Add_Click({
                 $srcFull = [System.IO.Path]::GetFullPath($auxSrc)
                 $dstFull = [System.IO.Path]::GetFullPath($auxDst)
                 if ($srcFull -ne $dstFull) {
-                    Copy-Item -Path $auxSrc -Destination $auxDst -Recurse -Force
+                    if (Test-Path -Path $auxSrc -PathType Container) {
+                        New-Item -ItemType Directory -Path $auxDst -Force | Out-Null
+                        Copy-Item -Path (Join-Path $auxSrc "*") -Destination $auxDst -Recurse -Force
+                    } else {
+                        Copy-Item -Path $auxSrc -Destination $auxDst -Force
+                    }
                 }
             }
         }

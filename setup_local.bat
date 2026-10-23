@@ -20,6 +20,7 @@ echo [2/4] Instalando librerias del servidor MCP...
 if not exist "mcp-autocad\temp" mkdir "mcp-autocad\temp"
 if not exist "mcp-autocad\logs" mkdir "mcp-autocad\logs"
 if not exist "lisp-library" mkdir "lisp-library"
+if not exist "docs" mkdir "docs"
 
 echo [3/4] Creando enlaces globales de Skills para Google Antigravity y OpenAI Codex...
 set "GEMINI_SKILLS=%USERPROFILE%\.gemini\config\skills"
