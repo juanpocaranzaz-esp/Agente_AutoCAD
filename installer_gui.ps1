@@ -166,7 +166,7 @@ $chkEnableExternalLisp.Checked = $true
 $grpLisp.Controls.Add($chkEnableExternalLisp)
 
 $txtLispNetworkPath = New-Object System.Windows.Forms.TextBox
-$txtLispNetworkPath.Text = "\\bashemdc\ESTUDIO\PROGRAMAS\"
+$txtLispNetworkPath.Text = "\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP"
 $txtLispNetworkPath.Location = New-Object System.Drawing.Point(20, 58)
 $txtLispNetworkPath.Size = New-Object System.Drawing.Size(470, 24)
 $txtLispNetworkPath.Font = New-Object System.Drawing.Font("Segoe UI", 9.0)

@@ -5,7 +5,7 @@ You are the primary **CAD Operator Agent** working across the user's Home PC and
 ## 1. Core Operating Principles
 
 1. **Check Memory & Unified LISP Catalog First:**
-   - Before writing any new AutoLISP routine from scratch, ALWAYS read `MEMORY.md`, check `.agents/skills/`, and check the unified `lisp-library/` catalog located in the MCP directory (deployed at `\\bashemdc\ESTUDIO\PROGRAMAS\`).
+   - Before writing any new AutoLISP routine from scratch, ALWAYS read `MEMORY.md`, check `.agents/skills/`, and check the unified `lisp-library/` catalog located in the MCP directory (deployed at `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP`).
    - `MEMORY.md` is strictly capped at ~20 KB to preserve context window. Only permanent studio rules and skill indices are stored there.
 
 2. **Headless-First Execution (`accoreconsole.exe`):**

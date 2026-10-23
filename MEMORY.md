@@ -11,7 +11,7 @@ Este archivo contiene los estándares aprobados del estudio y el índice de habi
 - **Coordenadas:** Los puntos DXF 10 de `TEXT`, `INSERT` y `LWPOLYLINE` se almacenan en OCS y se convierten a WCS mediante `(trans pt (if norm norm '(0 0 1)) 0)`; `MTEXT` almacena DXF 10 directamente en WCS.
 - **Política de respaldo:** Toda mutación genera un archivo secuencial `Nombre-Legacy-0.dwg`, `-Legacy-1.dwg`, etc. previo y ejecuta `AUDIT` y `QSAVE` solo si no ocurrieron errores de ejecución (`*mcp_err_flag*`). En caso de fallo, se revierte atómicamente el dibujo eliminando el respaldo redundante.
 - **Bloqueos de archivo:** Se verifica el acceso de escritura exclusivo en disco antes de procesar archivos cerrados, reportando el usuario y máquina que tienen el archivo abierto vía `.dwl`/`.dwl2`.
-- **Biblioteca unificada de LISPs:** Las rutinas comunes del estudio (`primitives.lsp`, `audit_topology.lsp`, `SUMLP`, `ARD`, `FM`, `RT`, `AT`, `RH`, `PESOACERO`, `PatitasRec`, etc.) se alojan en la carpeta `lisp-library/` dentro del MCP en `\\bashemdc\ESTUDIO\PROGRAMAS\`.
+- **Biblioteca unificada de LISPs:** Las rutinas comunes del estudio (`primitives.lsp`, `audit_topology.lsp`, `SUMLP`, `ARD`, `FM`, `RT`, `AT`, `RH`, `PESOACERO`, `PatitasRec`, etc.) se alojan en la carpeta `lisp-library/` dentro del MCP en `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP`.
 - **Primitivas por lotes:** Preferir `draw_primitives_batch` sobre llamadas atómicas múltiples para consolidar transacciones y respaldos.
 
 ## 2. Criterios Aprobados del Estudio (Capas, Estilos, Escalas)
