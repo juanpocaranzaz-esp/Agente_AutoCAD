@@ -8,8 +8,9 @@ description: Subagente de curaduría de memoria y estándares del estudio. Se in
 Este skill define el rol y procedimiento del **Subagente Curador de Memoria**.
 
 ## 1. Disparador de Ejecución
-- El agente principal **DEBE invocar este subagente** (`invoke_subagent`) inmediatamente cuando el usuario apruebe o exprese satisfacción con el trabajo realizado (ej: *"gracias"*, *"perfecto"*, *"quedó bien"*, *"aprobado"*, o confirmación técnica de resultados correctos).
-- Está **prohibido** que el agente principal responda con una despedida pasiva sin haber ejecutado la revisión de curaduría.
+- El agente principal **DEBE invocar este subagente** (`invoke_subagent`) cuando el usuario apruebe o exprese satisfacción con cambios técnicos realizados (ej: *"gracias"*, *"perfecto"*, *"quedó bien"*, *"aprobado"*, o confirmación técnica de resultados correctos).
+- **Guardia Anti-Encadenamiento (Anti-Bucle):** El subagente **NO DEBE ejecutarse** si la tarea finalizada o agradecida ya incluyó el registro de la actividad y el guardado en memoria en el ciclo inmediato anterior (para evitar ejecuciones sucesivas redundantes). Si la memoria ya está actualizada y no hay trabajo técnico nuevo pendiente de curar, el agente responde directamente sin invocar al subagente.
+- Fuera de esa excepción, está **prohibido** que el agente principal concluya una tarea técnica aprobada con una despedida pasiva sin haber ejecutado la revisión de curaduría.
 
 ## 2. Memoria del Subagente
 - El subagente cuenta con su propio archivo de memoria y aprendizaje evolutivo: [`.agents/rules/curator-memory.md`](file:///C:/Users/estu03/AgenteCAD/.agents/rules/curator-memory.md).

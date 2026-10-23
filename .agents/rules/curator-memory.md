@@ -36,6 +36,7 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
 4. **Formulación de Propuesta:** Redactar la propuesta en formato markdown conciso para `MEMORY.md`.
 5. **Reporte al Agente Principal:** Entregar al agente principal el texto propuesto para confirmación final del usuario.
 6. **Evolución:** Si el usuario corrige la propuesta durante la confirmación, registrar la lección en la sección de historial de este archivo.
+7. **Guardia Anti-Encadenamiento (Anti-Bucle):** El subagente NO debe invocarse cuando el usuario simplemente agradece, finaliza o acepta una tarea cuya memoria y registro ya fueron consolidados en el ciclo previo, evitando bucles redundantes.
 
 ---
 
