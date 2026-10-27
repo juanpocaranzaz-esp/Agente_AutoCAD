@@ -19,16 +19,18 @@ Este skill define el rol y procedimiento del **Subagente Curador de Memoria**.
 ## 3. Procedimiento del Subagente
 1. **Lectura de Memoria Propia:** Leer [`.agents/rules/curator-memory.md`](file:///C:/Users/estu03/AgenteCAD/.agents/rules/curator-memory.md) y [`MEMORY.md`](file:///C:/Users/estu03/AgenteCAD/MEMORY.md).
 2. **Auditoría de Conversación:** Analizar los cambios validados y el feedback del usuario en la sesión.
-3. **Filtrado Estricto de Criterios, Evaluación de Rutinas de Agente y Sincronización de Skills:**
+3. **Filtrado Estricto de Criterios, Evaluación de Rutinas de Agente y Sincronización de Catálogos:**
    - **Guardar:** Estándares de capas, topología de modelos, organización de planos, excepciones de obra (redactadas con precisión como casos específicos, no generalizados), invariantes de AutoCAD.
-   - **Descartar:** Comandos interactivos de `Usuario_directo` (van exclusivamente a `LISP LISTA DE COMANDOS.txt`), archivos temporales de testeo, rutas locales efímeras.
+   - **Descartar de MEMORY.md:** Comandos interactivos de `Usuario_directo` (van exclusivamente a `LISP LISTA DE COMANDOS.txt`), archivos temporales de testeo, rutas locales efímeras.
    - **Evaluar Conveniencia de Rutina LISP para Agente:** Revisar si el proceso técnico resolvió una tarea recurrente y evaluar si conviene generalizarlo en una rutina LISP paramétrica en `lisp-library/Agente/` y replicarla en red (`\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP\Agente`), verificando que no queden scripts ad-hoc en la raíz del repositorio.
    - **Actualizar y Vincular Skills:** Si se crea o actualiza una rutina en `lisp-library/Agente/`, verificar y asegurar que la Skill temática correspondiente en `.agents/skills/` sea actualizada para referenciar la rutina, sus funciones, parámetros y directrices de uso.
+   - **Actualizar Catálogo de Comandos de Usuario:** Si se crea, modifica o amplía una rutina en `Usuario_directo/`, verificar y asegurar que `LISP LISTA DE COMANDOS.txt` (en la raíz de `lisp-library/` y en red) sea actualizado tanto en el índice rápido (Parte 1) como en la guía detallada (Parte 2).
 4. **Elaboración de Análisis y Propuesta:** Redactar siempre un análisis estructurado de la sesión que distinga:
    - Temas técnicos abordados en la sesión.
    - Criterios o estándares identificados como candidatos para `MEMORY.md`.
    - Propuestas de consolidación de rutinas LISP en `lisp-library/Agente/` y actualizaciones en `.agents/skills/` si la tarea lo amerita.
-   - Elementos descartados (comandos de usuario, datos de prueba, scripts efímeros).
+   - Actualizaciones realizadas o requeridas en `LISP LISTA DE COMANDOS.txt` para rutinas de usuario.
+   - Elementos descartados (comandos de usuario de `MEMORY.md`, datos de prueba, scripts efímeros).
    - Texto exacto propuesto a incorporar en `MEMORY.md` (o dictamen de que no hay criterios nuevos por agregar).
 5. **Presentación Transparente al Usuario:** Entregar el análisis y la propuesta al agente principal para que este los exponga directamente al usuario.
 6. **Aplicación Estrictamente Condicional (Aprobación Humana Explícita):**
