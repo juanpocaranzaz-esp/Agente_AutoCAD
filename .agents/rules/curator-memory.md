@@ -31,6 +31,10 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
 4. **Arreglos Espaciales o Visuales Transitorios:**
    - Disposiciones temporales solicitadas ad-hoc por el usuario (ej. ordenar láminas horizontalmente en espacio modelo para facilitar la inspección visual humana durante una revisión). Pertenecen exclusivamente al contexto operativo de la tarea y **NUNCA** deben consolidarse como normas topológicas en `MEMORY.md`.
 
+### C. EVALUACIÓN DE CONVENIENCIA PARA LA BIBLIOTECA LISP DEL AGENTE (`lisp-library/Agente/`):
+- En cada tarea técnica concluida, el curador DEBE evaluar sistemáticamente si es conveniente generalizar la lógica desarrollada como una **rutina LISP maestra y reutilizable en la biblioteca del Agente** (`lisp-library/Agente/` y `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP\Agente`).
+- El curador debe auditar activamente que no queden scripts ad-hoc con coordenadas fijas en la raíz de `lisp-library/`, promoviendo su formalización como funciones paramétricas universales o su limpieza.
+
 ---
 
 ## 2. Historial de Aprendizajes del Subagente (Meta-Memoria)
@@ -57,6 +61,9 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
   - *Lección 13 (Arreglos visuales temporales vs. normas de estudio):* Si el usuario pide alinear o reordenar láminas o entidades de forma horizontal para facilitar su revisión visual puntual, NUNCA debe generalizarse como estándar de topología del estudio. Fue un arreglo transitorio y debe descartarse por completo de `MEMORY.md`.
   - *Lección 14 (Cómputo de estribos internos / ramas suplementarias):* Los estribos interiores no son un tercio rígido (1/3) del ancho total. Su longitud depende de la cantidad de tramos en que se subdivide la sección transversal y el número de barras longitudinales enlazadas. La regla correcta es medir el ancho del estribo geométrico y redondear a una fracción de la longitud real.
   - *Lección 15 (Cómputo de vigas acarteladas / canto variable):* En vigas de sección variable o con cartelas, la longitud de los estribos debe computarse como la longitud promedio **por tramo** (evaluando de forma independiente cada sector de estribos según la variación local de canto) y nunca mediante un promedio total global de la viga.
+  - *Lección 16 (Prohibición estricta de fórmulas matemáticas en MEMORY.md):* Las fórmulas algebraicas, expresiones LaTeX o ecuaciones de cálculo (ej. fórmulas de peso, cubicación con desperdicio) NO deben volcarse bajo ningún concepto en `MEMORY.md`. La memoria del estudio es exclusivamente conceptual y descriptiva (estándares de planos, capas, criterios cualitativos). La formulación matemática, lógica algorítmica y ecuaciones residen exclusivamente en las Skills modulares correspondientes (ej. `cad-estructuras-acero`).
+- **[2026-10-27 - Sesión Consolidación de Biblioteca LISP de Agente]:**
+  - *Lección 17 (Evaluación obligatoria de conveniencia para la biblioteca `Agente/`):* El usuario instruyó que en cada tarea técnica ejecutada, el curador revise y determine proactivamente si es conveniente crear y guardar una rutina LISP paramétrica en la biblioteca `lisp-library/Agente/` (y en red `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP\Agente`), impidiendo que soluciones valiosas queden aisladas como scripts específicos de un archivo o desordenadas en la raíz del repositorio.
 
 ---
 
@@ -64,8 +71,10 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
 
 1. **Lectura de Memoria:** Leer este archivo (`.agents/rules/curator-memory.md`) y el estado actual de `MEMORY.md`.
 2. **Auditoría de Conversación:** Escanear el transcript de la sesión reciente identificando decisiones, correcciones y nuevos estándares validados.
-3. **Filtrado Estricto:** Aplicar los criterios de la Sección 1 (descartar comandos de usuario, descartar generalizaciones).
-4. **Análisis y Formulación de Propuesta:** Redactar un análisis estructurado de lo evaluado y el texto propuesto para `MEMORY.md` (o indicar claramente si no hay criterios nuevos).
+3. **Filtrado Estricto y Evaluación de Conveniencia de LISP:**
+   - Aplicar los criterios de la Sección 1 (descartar comandos de usuario, descartar generalizaciones).
+   - Auditar si el procedimiento técnico resolvió un proceso recurrente y evaluar la conveniencia de consolidarlo como rutina paramétrica en `lisp-library/Agente/` y replicarlo en red, verificando que no queden scripts temporales en la raíz de `lisp-library/`.
+4. **Análisis y Formulación de Propuesta:** Redactar un análisis estructurado de lo evaluado, incluyendo propuestas de memoria para `MEMORY.md` y propuestas de rutinas para `lisp-library/Agente/` si corresponde.
 5. **Presentación Obligatoria al Usuario:** Entregar al agente principal el análisis y la propuesta para que este los exponga al usuario de forma transparente.
 6. **Aprobación Explícita Estricta:** NUNCA modificar `MEMORY.md` de manera autónoma. La llamada a `save_studio_learning(..., confirmed_by_user=True)` procede ÚNICAMENTE tras una respuesta afirmativa explícita del usuario (ej: *"sí"*, *"de acuerdo"*, *"guárdalo"*, *"confirmo"*) o por solicitud directa del usuario.
 7. **Evolución:** Si el usuario corrige la propuesta durante la confirmación, el subagente debe registrar la corrección en la Sección 2 de este archivo.
