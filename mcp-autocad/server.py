@@ -2380,6 +2380,7 @@ def build_headless_plot_script(
             f'"{out_posix}"\n'
             "_No\n"
             "_Yes\n"
+            '(setvar "FILEDIA" 1)\n'
             "_.QUIT _Y\n"
         )
     else:
@@ -2407,6 +2408,7 @@ def build_headless_plot_script(
             f'"{out_posix}"\n'
             "_No\n"
             "_Yes\n"
+            '(setvar "FILEDIA" 1)\n'
             "_.QUIT _Y\n"
         )
     return plot_lines
@@ -2833,6 +2835,7 @@ def inspect_cad_headless(
         "CMDECHO 0\n"
         "SECURELOAD 0\n"
         f'(load "{lsp_posix}")\n'
+        '(setvar "FILEDIA" 1)\n'
         "_.QUIT _Y\n"
     )
     scr_file.write_text(scr_content, encoding="cp1252", errors="replace")
@@ -3148,6 +3151,7 @@ def mutate_cad_headless(
         '  (if (> (logand (getvar "CMDACTIVE") 3) 0) (while (> (logand (getvar "CMDACTIVE") 3) 0) (command)))\n'
         '  (if mcp_old_osmode (setvar "OSMODE" mcp_old_osmode))\n'
         '  (if mcp_old_dimzin (setvar "DIMZIN" mcp_old_dimzin))\n'
+        '  (setvar "FILEDIA" 1)\n'
         '  (if mcp_ucs_pushed (progn (command "_.UCS" "_Previous") (setq mcp_ucs_pushed nil)))\n'
         '  (princ (strcat "\\n[MCP_LISP_ERROR]: " (if msg msg "Unknown error") "\\n"))\n'
         "  (princ)\n"
@@ -3170,6 +3174,7 @@ def mutate_cad_headless(
         "  )\n"
         '  (if mcp_old_osmode (setvar "OSMODE" mcp_old_osmode))\n'
         '  (if mcp_old_dimzin (setvar "DIMZIN" mcp_old_dimzin))\n'
+        '  (setvar "FILEDIA" 1)\n'
         '  (if mcp_ucs_pushed (progn (command "_.UCS" "_Previous") (setq mcp_ucs_pushed nil)))\n'
         f"{audit_cmd}"
         "  (if (not *mcp_err_flag*)\n"
@@ -3191,6 +3196,7 @@ def mutate_cad_headless(
         "CMDECHO 0\n"
         "SECURELOAD 0\n"
         f'(load "{lsp_file.as_posix()}")\n'
+        '(setvar "FILEDIA" 1)\n'
         "_.QUIT _Y\n"
     )
     scr_file.write_text(scr_content, encoding="cp1252", errors="replace")
@@ -3397,7 +3403,7 @@ def execute_cad_live(
                 f'(setq mcp_old_secureload {secureload_val_str})\n'
                 "(defun *error* (msg)\n"
                 '  (if (> (logand (getvar "CMDACTIVE") 3) 0) (while (> (logand (getvar "CMDACTIVE") 3) 0) (command)))\n'
-                '  (if mcp_old_filedia    (setvar "FILEDIA"    mcp_old_filedia))\n'
+                '  (setvar "FILEDIA"    1)\n'
                 '  (if mcp_old_cmdecho    (setvar "CMDECHO"    mcp_old_cmdecho))\n'
                 '  (if mcp_old_osmode     (setvar "OSMODE"     mcp_old_osmode))\n'
                 '  (if mcp_old_dimzin     (setvar "DIMZIN"     mcp_old_dimzin))\n'
@@ -3422,7 +3428,7 @@ def execute_cad_live(
                 '  (setvar "DIMZIN"     0)\n'
                 '  (setvar "SECURELOAD" 0)\n'
                 f"{combined_lisp}\n"
-                '  (if mcp_old_filedia    (setvar "FILEDIA"    mcp_old_filedia))\n'
+                '  (setvar "FILEDIA"    1)\n'
                 '  (if mcp_old_cmdecho    (setvar "CMDECHO"    mcp_old_cmdecho))\n'
                 '  (if mcp_old_osmode     (setvar "OSMODE"     mcp_old_osmode))\n'
                 '  (if mcp_old_dimzin     (setvar "DIMZIN"     mcp_old_dimzin))\n'
@@ -3475,6 +3481,10 @@ def execute_cad_live(
                         doc.SetVariable("SECURELOAD", old_secureload)
                     except Exception:
                         pass
+                try:
+                    doc.SetVariable("FILEDIA", 1)
+                except Exception:
+                    pass
                 if wait_completion and quiescent:
                     lsp_file.unlink(missing_ok=True)
                     status_file.unlink(missing_ok=True)

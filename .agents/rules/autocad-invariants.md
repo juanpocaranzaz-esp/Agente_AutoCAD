@@ -29,7 +29,7 @@ description: Mandatory AutoCAD 2021 English command, AutoLISP, coordinate system
 
 4. **International Non-Modal Commands:**
    - Every AutoCAD command in scripts (`.scr`) or `(command ...)` MUST use underscore `_` and hyphen `-` where applicable: `_-LAYER`, `_-INSERT`, `_-STYLE`, `_-PURGE`, `_-PLOT`, `_.ZOOM`, `_.QSAVE`, `_.AUDIT`.
-   - Never invoke commands that trigger modal dialog boxes. Always set `FILEDIA 0` and `CMDECHO 0`.
+   - Never invoke commands that trigger modal dialog boxes. Always set `FILEDIA 0` and `CMDECHO 0` during script processing, BUT restore `(setvar "FILEDIA" 1)` unconditionally before exiting.
 
 5. **Security & Trusted Paths Guard:**
    - Always set `SECURELOAD 0` in headless scripts before calling `(load ...)` to prevent AutoCAD from refusing to load AutoLISP files from workspace folders.
@@ -47,3 +47,8 @@ description: Mandatory AutoCAD 2021 English command, AutoLISP, coordinate system
 8. **Spatial BBox, Pure-AutoLISP Takeoffs, Diffing & Headless Plotting (v1.4.8):**
    - Spatial filtering (`MCP_BBOX`) and curve metric calculations (`MCP_TAKEOFF` for `LINE`, `LWPOLYLINE` with bulge arcs, `CIRCLE`, `ARC`) execute in standard AutoLISP (`entget`) without ActiveX dependencies.
    - Headless plotting uses international non-modal `_.-PLOT` with `FILEDIA 0`, `CMDECHO 0`, and `BACKGROUNDPLOT 0`.
+
+9. **User-Mode Restoration Invariant (FILEDIA 1):**
+   - The system variable `FILEDIA` is saved in the user's Windows Registry profile (`Saved in: Registry`).
+   - Because `accoreconsole.exe` shares the exact same Windows Registry profile (`<<Unnamed Profile>>`) as the AutoCAD GUI (`acad.exe`), any headless or live script that sets `FILEDIA 0` MUST unconditionally execute `(setvar "FILEDIA" 1)` immediately prior to quitting (`_.QUIT`) or finishing.
+   - Leaving AutoCAD in `FILEDIA 0` is strictly forbidden across all headless tools, live tools, and user-facing LISP routines.

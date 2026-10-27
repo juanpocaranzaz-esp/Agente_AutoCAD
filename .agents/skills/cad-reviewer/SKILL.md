@@ -1,31 +1,38 @@
 ---
 name: cad-reviewer
-description: Subagente de control de calidad (QA) y revisión técnica de planos CAD. Se invoca automáticamente tras realizar modificaciones, transformaciones o generación de entidades en archivos DWG antes de reportar la finalización al usuario, auditando la correcta aplicación geométrica, topológica y normativa.
+description: Protocolo de control de calidad (QA) y verificación técnica integrada de planos CAD. Establece el checklist de auditoría (AUDIT, DBMOD=0, conciliación numérica, bbox, capas y FILEDIA 1) que ejecuta obligatoriamente el mismo agente o subagente que realiza la mutación antes de reportar la finalización al usuario.
 ---
 
-# CAD Reviewer Skill & Subagent Guide
+# CAD Reviewer — Protocolo de Verificación Técnica Integrada (QA)
 
-Este skill define el rol y procedimiento del **Subagente Revisor de Calidad (QA Reviewer)** de AutoCAD.
+Este skill define el checklist y procedimiento obligatorio de **Control de Calidad (QA Integrado)** en AutoCAD.
 
-## 1. Disparador de Ejecución Obligatorio
-- El agente principal **DEBE invocar este subagente** (`invoke_subagent` con la persona o rol `cad-reviewer`) **siempre que realice modificaciones o transformaciones en archivos DWG** (reordenamiento de láminas, duplicación de planos, reemplazo o generación de tablas de armado, cómputos métricos, edición de capas o geometrías).
-- La revisión DEBE ejecutarse **ANTES de avisar al usuario** que la tarea está concluida.
-- Está terminantemente prohibido que el agente principal reporte al usuario que los cambios están listos sin haber obtenido previamente el dictamen de aprobación técnica emitido por el Subagente Revisor.
+## 1. Principio de Ejecución Integrada
+- **QA Integrado en el Ejecutor:** La verificación técnica se ejecuta de forma obligatoria **como paso final dentro del mismo agente o subagente que realizó la modificación** antes de notificar al usuario.
+- **Sin Subagentes Desacoplados:** Está prohibido lanzar un subagente revisor externo posterior para releer el mismo DWG, eliminando re-inspecciones duplicadas, tiempos muertos de arranque en frío y desincronizaciones de contexto.
+- **Prohibición de Shell Crudo:** Todas las verificaciones deben ejecutarse exclusivamente mediante las herramientas Headless MCP (`inspect_cad_headless`, `audit_drawing_topology`, `capture_drawing_preview`), garantizando rollback y preservación de `FILEDIA 1`.
 
-## 2. Procedimiento de Auditoría Técnica del Revisor
-1. **Inspección Headless del Archivo Modificado:**
-   - Inspeccionar los planos resultantes utilizando herramientas headless (`inspect_cad_headless`, scripts de extracción controlada o `accoreconsole`).
-   - Verificar que no existan errores de dibujo (`_.AUDIT` sin errores críticos) y que la base de datos esté debidamente guardada (`DBMOD == 0`).
-2. **Auditoría de Requerimientos Específicos de la Tarea:**
-   - **Disposición y Geometría:** Comprobar que el reordenamiento espacial (ej. láminas de izquierda a derecha en una sola fila a $Y=0$) y las copias superiores (con su offset vertical correspondiente) estén en las coordenadas exactas.
-   - **Integridad de Contenido:** Verificar que las copias superiores contengan la totalidad de los elementos requeridos y que las tablas reemplazadas o regeneradas reflejen fielmente los datos de armado, respetando estilos (`CYPETXT_Swis721_Ex_BT`), capas (`TABLAS`, `TEXTO_TABLAS`, `DESPIECES_TABLA`, `TEXTOS_COTAS_DESPIECES_TABLA`), alturas de texto, justificaciones y despieces.
-   - **Concordancia Numérica y Despiece:** Comparar que las cantidades, diámetros, longitudes y pesos totales coincidan con el despiece geométrico de los pórticos del dibujo.
-3. **Control de Invariantes y Calidad CAD:**
-   - Ninguna entidad debe quedar en capas inexistentes o indebidas.
-   - Preservación estricta de coordenadas WCS.
-   - No deben quedar restos de entidades borradas accidentalmente ni solapamientos espurios.
-4. **Emisión del Dictamen Estructurado:**
-   - El subagente entrega al agente principal un informe con:
-     a) **Estado del Dictamen:** `APROBADO` (PASS) o `REQUIERE CORRECCIÓN` (FAIL).
-     b) **Desglose de Hallazgos:** Verificación por lámina, posición y entidad.
-     c) **Advertencias o Anomalías:** Lista explícita de cualquier caso ambiguo o sección mal representada detectada en el plano para su oportuna consulta con el usuario.
+## 2. Checklist Obligatorio de Auditoría Técnica
+
+1. **Integridad de Base de Datos y Comandos:**
+   - Confirmar en el retorno de `mutate_cad_headless` que `status == "ok"` y `command_warnings == []`.
+   - Verificar que `_.AUDIT _Y` finalizó con 0 errores críticos (`Total errors found 0 fixed 0`).
+   - Verificar que los cambios se persistieron en el disco (`DBMOD == 0`).
+   - Verificar que la variable `FILEDIA` quedó restaurada en `1`.
+
+2. **Auditoría Geométrica y de Contenido (vía `inspect_cad_headless` con `bbox`):**
+   - **Ventana Espacial Acotada:** Inspeccionar la zona modificada pasando `bbox=[xmin, ymin, xmax, ymax]` y `fields=[...]` para auditar entidades sin saturar el contexto.
+   - **Disposición y Coordenadas:** Comprobar que las entidades modificadas o generadas estén en las coordenadas WCS exactas.
+   - **Capas y Estilos:** Verificar que ninguna entidad quede en capas indebidas y que los textos y cotas respeten estilos del estudio (`CYPETXT_Swis721_Ex_BT`), alturas, width factor (ej. `0.877` en tablas) y capas estándar (`TABLAS`, `TEXTO_TABLAS`, `DESPIECES_TABLA`).
+
+3. **Concordancia Numérica y Despieces:**
+   - Si se generaron o modificaron tablas de armado o cómputos, contrastar analíticamente que las sumatorias de pesos, longitudes y cantidades coincidan 100% con las entidades del dibujo o la tabla de referencia.
+
+4. **Higiene Topológica:**
+   - Si se generaron primitivas o contornos, validar la continuidad con `audit_drawing_topology` o inspección de vértices (evitando vértices duplicados o colapsados).
+
+## 3. Reporte Estructurado de Conclusión
+Al finalizar la tarea, el agente incluye en su respuesta al usuario el resumen del QA integrado:
+- **Estado:** `APROBADO (PASS)` o `CORRECCIÓN APLICADA EN SESIÓN`.
+- **Métricas:** Conteo de entidades agregadas/modificadas, confirmación de `DBMOD == 0` y `AUDIT` limpio.
+- **Observaciones Técnicas:** Advertencias o aclaraciones pertinentes sobre la geometría.
