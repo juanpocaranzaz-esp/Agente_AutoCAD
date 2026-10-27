@@ -24,7 +24,8 @@ Este archivo contiene los estándares aprobados del estudio y el índice de habi
 - **Política de respaldo:** Toda mutación genera un archivo secuencial `Nombre-Legacy-0.dwg`, `-Legacy-1.dwg`, etc. previo y ejecuta `AUDIT` y `QSAVE` solo si no ocurrieron errores de ejecución (`*mcp_err_flag*`). En caso de fallo, se revierte atómicamente el dibujo eliminando el respaldo redundante.
 - **Bloqueos de archivo:** Se verifica el acceso de escritura exclusivo en disco antes de procesar archivos cerrados, reportando el usuario y máquina que tienen el archivo abierto vía `.dwl`/`.dwl2`.
 - **Biblioteca unificada de LISPs:** Estructura dual estandarizada en `lisp-library/` y en red en `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP`:
-  - `Usuario_directo/`: Rutinas interactivas de uso manual diario en interfaz gráfica (`acaddoc.lsp`), con guía de referencia en `LISP LISTA DE COMANDOS.txt`.
+  - `LISP LISTA DE COMANDOS.txt`: Catálogo y guía de referencia unificada de comandos para usuario directo ubicado directamente en la raíz de `lisp-library/` y en `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP\LISP LISTA DE COMANDOS.txt`.
+  - `Usuario_directo/`: Rutinas interactivas de uso manual diario en interfaz gráfica (`acaddoc.lsp`), con comandos cortos (`RT2`, `ARD`, `FM`, `RH`, `RAR`, `AT`, `Patitas`, `SUMLP`, etc.).
   - `Agente/`: Rutinas automatizadas puras para ejecución headless (`accoreconsole.exe`), sin interacción por teclado/pantalla (`primitives.lsp`, `audit_topology.lsp`).
 - **Primitivas por lotes:** Preferir `draw_primitives_batch` sobre llamadas atómicas múltiples para consolidar transacciones y respaldos.
 
