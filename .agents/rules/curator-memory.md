@@ -31,9 +31,10 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
 4. **Arreglos Espaciales o Visuales Transitorios:**
    - Disposiciones temporales solicitadas ad-hoc por el usuario (ej. ordenar láminas horizontalmente en espacio modelo para facilitar la inspección visual humana durante una revisión). Pertenecen exclusivamente al contexto operativo de la tarea y **NUNCA** deben consolidarse como normas topológicas en `MEMORY.md`.
 
-### C. EVALUACIÓN DE CONVENIENCIA PARA LA BIBLIOTECA LISP DEL AGENTE (`lisp-library/Agente/`):
+### C. EVALUACIÓN DE CONVENIENCIA PARA LA BIBLIOTECA LISP DEL AGENTE (`lisp-library/Agente/`) Y VINCULACIÓN EN SKILLS:
 - En cada tarea técnica concluida, el curador DEBE evaluar sistemáticamente si es conveniente generalizar la lógica desarrollada como una **rutina LISP maestra y reutilizable en la biblioteca del Agente** (`lisp-library/Agente/` y `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP\Agente`).
 - El curador debe auditar activamente que no queden scripts ad-hoc con coordenadas fijas en la raíz de `lisp-library/`, promoviendo su formalización como funciones paramétricas universales o su limpieza.
+- **Vinculación Obligatoria en Skills:** Toda rutina incorporada o modificada en `lisp-library/Agente/` DEBE ser referenciada y documentada inmediatamente en la Skill temática correspondiente en `.agents/skills/` (detallando ruta del script, funciones exportadas, argumentos y capas requeridas).
 
 ---
 
@@ -64,6 +65,7 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
   - *Lección 16 (Prohibición estricta de fórmulas matemáticas en MEMORY.md):* Las fórmulas algebraicas, expresiones LaTeX o ecuaciones de cálculo (ej. fórmulas de peso, cubicación con desperdicio) NO deben volcarse bajo ningún concepto en `MEMORY.md`. La memoria del estudio es exclusivamente conceptual y descriptiva (estándares de planos, capas, criterios cualitativos). La formulación matemática, lógica algorítmica y ecuaciones residen exclusivamente en las Skills modulares correspondientes (ej. `cad-estructuras-acero`).
 - **[2026-10-27 - Sesión Consolidación de Biblioteca LISP de Agente]:**
   - *Lección 17 (Evaluación obligatoria de conveniencia para la biblioteca `Agente/`):* El usuario instruyó que en cada tarea técnica ejecutada, el curador revise y determine proactivamente si es conveniente crear y guardar una rutina LISP paramétrica en la biblioteca `lisp-library/Agente/` (y en red `\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP\Agente`), impidiendo que soluciones valiosas queden aisladas como scripts específicos de un archivo o desordenadas en la raíz del repositorio.
+  - *Lección 18 (Actualización obligatoria de Skills al consolidar rutinas de IA):* Cuando se crea o actualiza una rutina en la biblioteca del Agente (`lisp-library/Agente/`), es un requisito estricto actualizar en el mismo ciclo la Skill modular respectiva (`.agents/skills/`). Las skills son el manual de operaciones y memoria operativa del agente para cada dominio; una rutina LISP sin referencia en su Skill queda desconectada del contexto operativo futuro.
 
 ---
 
@@ -71,10 +73,11 @@ Este archivo constituye la **memoria propia y evolutiva del Subagente Curador**.
 
 1. **Lectura de Memoria:** Leer este archivo (`.agents/rules/curator-memory.md`) y el estado actual de `MEMORY.md`.
 2. **Auditoría de Conversación:** Escanear el transcript de la sesión reciente identificando decisiones, correcciones y nuevos estándares validados.
-3. **Filtrado Estricto y Evaluación de Conveniencia de LISP:**
+3. **Filtrado Estricto y Evaluación de Conveniencia de LISP y Skills:**
    - Aplicar los criterios de la Sección 1 (descartar comandos de usuario, descartar generalizaciones).
    - Auditar si el procedimiento técnico resolvió un proceso recurrente y evaluar la conveniencia de consolidarlo como rutina paramétrica en `lisp-library/Agente/` y replicarlo en red, verificando que no queden scripts temporales en la raíz de `lisp-library/`.
-4. **Análisis y Formulación de Propuesta:** Redactar un análisis estructurado de lo evaluado, incluyendo propuestas de memoria para `MEMORY.md` y propuestas de rutinas para `lisp-library/Agente/` si corresponde.
+   - Verificar y asegurar que cualquier rutina de IA creada o modificada quede explícitamente referenciada y documentada en su Skill temática correspondiente en `.agents/skills/`.
+4. **Análisis y Formulación de Propuesta:** Redactar un análisis estructurado de lo evaluado, incluyendo propuestas de memoria para `MEMORY.md`, propuestas de rutinas para `lisp-library/Agente/` y actualizaciones requeridas en `.agents/skills/` si corresponde.
 5. **Presentación Obligatoria al Usuario:** Entregar al agente principal el análisis y la propuesta para que este los exponga al usuario de forma transparente.
 6. **Aprobación Explícita Estricta:** NUNCA modificar `MEMORY.md` de manera autónoma. La llamada a `save_studio_learning(..., confirmed_by_user=True)` procede ÚNICAMENTE tras una respuesta afirmativa explícita del usuario (ej: *"sí"*, *"de acuerdo"*, *"guárdalo"*, *"confirmo"*) o por solicitud directa del usuario.
 7. **Evolución:** Si el usuario corrige la propuesta durante la confirmación, el subagente debe registrar la corrección en la Sección 2 de este archivo.
