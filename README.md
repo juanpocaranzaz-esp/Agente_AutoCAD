@@ -1,11 +1,11 @@
-# Agente AutoCAD 2021 MCP (v1.4.9)
+# Agente AutoCAD 2021 MCP (v2.0.0)
 
 [![AutoCAD 2021](https://img.shields.io/badge/AutoCAD-2021%20English-0696D7.svg)](https://www.autodesk.com)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Protocol-purple.svg)](https://modelcontextprotocol.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Agente de ingeniería e integración CAD basado en el protocolo **Model Context Protocol (MCP)** y **FastMCP**, diseñado para operar sobre **AutoCAD 2021 (English)** en entornos profesionales (Casa / Oficina) de manera determinista, segura y de alto rendimiento.
+Agente de ingeniería e integración CAD basado en el protocolo **Model Context Protocol (MCP)** y **FastMCP**, diseñado para operar sobre **AutoCAD 2021 (English)** en entornos profesionales de manera determinista, segura y de alto rendimiento.
 
 ---
 
@@ -77,7 +77,7 @@ setup_local.bat
 | `list_open_drawings_gui` | GUI (Live) | Lista todos los dibujos actualmente abiertos en la interfaz de AutoCAD reportando ruta, pestaña activa y cambios pendientes. |
 | `close_drawing_gui` | GUI (Live) | Cierra un dibujo abierto en AutoCAD GUI (activo o por nombre) con opción de guardar cambios (`save=True/False`). |
 | `execute_cad_live` | GUI (Live) | Ejecuta comandos o LISP en la sesión activa de AutoCAD abierta por el usuario, preservando la selección actual (`Pickfirst`). |
-| `save_studio_learning` | MCP | Curaduría y registro de nuevos aprendizajes y rutinas LISP estandarizadas del estudio. |
+| `save_studio_learning` | MCP | Curaduría y registro de nuevos aprendizajes técnicos y rutinas LISP estandarizadas. |
 
 ---
 
@@ -87,7 +87,7 @@ setup_local.bat
 |---|---|---|
 | `ACAD_CONSOLE_PATH` | `C:\Program Files\Autodesk\AutoCAD 2021\accoreconsole.exe` | Ruta al ejecutable de consola headless de AutoCAD. |
 | `AGENTE_ROOT` | Ruta raíz del proyecto | Directorio base de scripts, plantillas y temporales. |
-| `ACAD_EXTRA_LISP_DIRS` | Opcional | Directorios adicionales autorizados para carga de rutinas LISP seguras (ej. carpetas de red de estudio). |
+| `ACAD_EXTRA_LISP_DIRS` | Opcional | Directorios adicionales autorizados para carga de rutinas LISP seguras (ej. carpetas compartidas de red). |
 | `ACAD_MCP_DEV_NO_INSTALL`| `0` | Modo desarrollo/banco de pruebas: desactiva la sincronización global involuntaria. |
 
 ---
@@ -96,7 +96,7 @@ setup_local.bat
 
 Para ejecutar la suite exhaustiva de 15 pruebas unitarias y de integración:
 ```powershell
-python run_tests_v1.4.9.py
+python run_tests_v2.0.0.py
 ```
 
 La suite valida:

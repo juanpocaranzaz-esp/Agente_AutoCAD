@@ -4,7 +4,7 @@ Scaffolds and unpacks the entire project from a specification JSON file into any
 Usage:
     python unpack_spec.py [path_to_specification.json] [target_directory]
 Example:
-    python unpack_spec.py especificacion_del_agente_y_mcp_autocad_2021-V1.4.9.json C:\\AgenteCAD
+    python unpack_spec.py especificacion_del_agente_y_mcp_autocad_2021-V2.0.0.json C:\\AgenteCAD
 """
 
 import json

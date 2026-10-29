@@ -1,5 +1,5 @@
 # installer_gui.ps1
-# Asistente Visual de Instalacion y Configuracion del Agente AutoCAD 2021 MCP (v1.4.9)
+# Asistente Visual de Instalacion y Configuracion del Agente AutoCAD 2021 MCP (v2.0.0)
 # Compatible con Windows 10 y Windows 11 (PowerShell 5.1+)
 
 Add-Type -AssemblyName System.Windows.Forms
@@ -8,7 +8,7 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Instalador del Agente de AutoCAD 2021 MCP (v1.4.9)"
+$form.Text = "Instalador del Agente de AutoCAD 2021 MCP (v2.0.0)"
 $form.Size = New-Object System.Drawing.Size(680, 720)
 $form.StartPosition = "CenterScreen"
 $form.FormBorderStyle = "FixedDialog"
@@ -31,7 +31,7 @@ $titleLabel.Size = New-Object System.Drawing.Size(630, 30)
 $headerPanel.Controls.Add($titleLabel)
 
 $subTitleLabel = New-Object System.Windows.Forms.Label
-$subTitleLabel.Text = "Asistente de configuración de estaciones de trabajo (Casa / Estudio)"
+$subTitleLabel.Text = "Asistente de configuración de estaciones de trabajo"
 $subTitleLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9.5)
 $subTitleLabel.ForeColor = [System.Drawing.Color]::FromArgb(226, 232, 240)
 $subTitleLabel.Location = New-Object System.Drawing.Point(26, 44)
@@ -149,24 +149,24 @@ $btnBrowseInstall.Add_Click({
     }
 })
 
-# --- Grupo 2: Biblioteca de LISPs de Red / Estudio ---
+# --- Grupo 2: Biblioteca Externa de AutoLISP ---
 $grpLisp = New-Object System.Windows.Forms.GroupBox
-$grpLisp.Text = "2. Biblioteca Externa de AutoLISP (Red / Estudio)"
+$grpLisp.Text = "2. Biblioteca Externa de AutoLISP (Opcional)"
 $grpLisp.Font = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
 $grpLisp.Location = New-Object System.Drawing.Point(24, 256)
 $grpLisp.Size = New-Object System.Drawing.Size(616, 100)
 $form.Controls.Add($grpLisp)
 
 $chkEnableExternalLisp = New-Object System.Windows.Forms.CheckBox
-$chkEnableExternalLisp.Text = "Vincular biblioteca de LISPs del estudio (ACAD_EXTRA_LISP_DIRS)"
+$chkEnableExternalLisp.Text = "Vincular biblioteca externa de AutoLISP (ACAD_EXTRA_LISP_DIRS)"
 $chkEnableExternalLisp.Font = New-Object System.Drawing.Font("Segoe UI", 9.0)
 $chkEnableExternalLisp.Location = New-Object System.Drawing.Point(20, 26)
 $chkEnableExternalLisp.Size = New-Object System.Drawing.Size(560, 24)
-$chkEnableExternalLisp.Checked = $true
+$chkEnableExternalLisp.Checked = $false
 $grpLisp.Controls.Add($chkEnableExternalLisp)
 
 $txtLispNetworkPath = New-Object System.Windows.Forms.TextBox
-$txtLispNetworkPath.Text = "\\bashemdc\ESTUDIO\PROGRAMAS\AutoCAD\Biblioteca_LISP"
+$txtLispNetworkPath.Text = ""
 $txtLispNetworkPath.Location = New-Object System.Drawing.Point(20, 58)
 $txtLispNetworkPath.Size = New-Object System.Drawing.Size(470, 24)
 $txtLispNetworkPath.Font = New-Object System.Drawing.Font("Segoe UI", 9.0)
@@ -380,7 +380,7 @@ $btnInstall.Add_Click({
             $resolvedDst = (Resolve-Path $targetDir -ErrorAction SilentlyContinue)
             $dstPath = if ($resolvedDst) { $resolvedDst.Path } else { $targetDir }
             if ($resolvedSrc -ne $dstPath) {
-                foreach ($item in @(".agents", "docs", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore", "README.md", "LICENSE", "run_tests_v1.4.9.py")) {
+                foreach ($item in @(".agents", "docs", "lisp-library", "mcp-autocad", "requirements.txt", "setup_local.bat", "AGENTS.md", "MEMORY.md", ".gitignore", "README.md", "LICENSE", "run_tests_v2.0.0.py")) {
                     $itemSrc = Join-Path $scriptDir $item
                     if (Test-Path $itemSrc) {
                         $itemDst = Join-Path $targetDir $item
@@ -398,7 +398,7 @@ $btnInstall.Add_Click({
         }
 
         # Asegurar copia de instaladores auxiliares, documentación y pruebas en destino
-        foreach ($aux in @("installer_gui.ps1", "instalar.bat", "unpack_spec.py", "pack_spec.py", "README.md", "LICENSE", "run_tests_v1.4.9.py", "docs")) {
+        foreach ($aux in @("installer_gui.ps1", "instalar.bat", "unpack_spec.py", "pack_spec.py", "README.md", "LICENSE", "run_tests_v2.0.0.py", "docs")) {
             $auxSrc = Join-Path $scriptDir $aux
             if (Test-Path $auxSrc) {
                 $auxDst = Join-Path $targetDir $aux
@@ -636,7 +636,7 @@ $btnInstall.Add_Click({
         $lblStatusBottom.ForeColor = [System.Drawing.Color]::DarkGreen
 
         [System.Windows.Forms.MessageBox]::Show(
-            "El Agente de AutoCAD 2021 MCP v1.4.9 se instaló y configuró correctamente en:`n`n$targetDir`n`nLas IDEs seleccionadas ya están vinculadas.",
+            "El Agente de AutoCAD 2021 MCP v2.0.0 se instaló y configuró correctamente en:`n`n$targetDir`n`nLas IDEs seleccionadas ya están vinculadas.",
             "Instalación Exitosa",
             [System.Windows.Forms.MessageBoxButtons]::OK,
             [System.Windows.Forms.MessageBoxIcon]::Information

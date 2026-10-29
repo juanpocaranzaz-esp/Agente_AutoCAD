@@ -23,7 +23,7 @@ Este skill define el checklist y procedimiento obligatorio de **Control de Calid
 2. **Auditoría Geométrica y de Contenido (vía `inspect_cad_headless` con `bbox`):**
    - **Ventana Espacial Acotada:** Inspeccionar la zona modificada pasando `bbox=[xmin, ymin, xmax, ymax]` y `fields=[...]` para auditar entidades sin saturar el contexto.
    - **Disposición y Coordenadas:** Comprobar que las entidades modificadas o generadas estén en las coordenadas WCS exactas.
-   - **Capas y Estilos:** Verificar que ninguna entidad quede en capas indebidas y que los textos y cotas respeten estilos del estudio (`CYPETXT_Swis721_Ex_BT`), alturas, width factor (ej. `0.877` en tablas) y capas estándar (`TABLAS`, `TEXTO_TABLAS`, `DESPIECES_TABLA`).
+   - **Capas y Estilos:** Verificar que ninguna entidad quede en capas indebidas y que los textos y cotas respeten los estilos tipográficos definidos, alturas proporcionales, factores de escala correspondientes y capas normadas del proyecto.
 
 3. **Concordancia Numérica y Despieces:**
    - Si se generaron o modificaron tablas de armado o cómputos, contrastar analíticamente que las sumatorias de pesos, longitudes y cantidades coincidan 100% con las entidades del dibujo o la tabla de referencia.

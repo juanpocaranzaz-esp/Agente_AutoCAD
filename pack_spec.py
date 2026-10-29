@@ -1,7 +1,8 @@
-"""
-Packager script for AutoCAD 2021 MCP Agent Specification V1.4.9
+"""Packager script for AutoCAD 2021 MCP Agent Specification V2.0.0
+
 Reads the specification, synchronizes all file contents from disk,
-updates version metadata, excludes development-only rules, and writes V1.4.9.json.
+updates version metadata, excludes development-only rules and proprietary skills,
+and writes especificacion_del_agente_y_mcp_autocad_2021-V2.0.0.json.
 """
 
 import json
@@ -10,13 +11,16 @@ from pathlib import Path
 
 def pack() -> None:
     base_dir = Path(__file__).resolve().parent
+    v200_path = base_dir / "especificacion_del_agente_y_mcp_autocad_2021-V2.0.0.json"
     v149_path = base_dir / "especificacion_del_agente_y_mcp_autocad_2021-V1.4.9.json"
-    if not v149_path.exists():
-        raise FileNotFoundError(f"Missing specification file: {v149_path}")
 
-    data = json.loads(v149_path.read_text(encoding="utf-8"))
+    source_path = v200_path if v200_path.exists() else v149_path
+    if not source_path.exists():
+        raise FileNotFoundError(f"Missing specification file: {v200_path} or {v149_path}")
 
-    data["project_metadata"]["version"] = "1.4.9"
+    data = json.loads(source_path.read_text(encoding="utf-8"))
+
+    data["project_metadata"]["version"] = "2.0.0"
 
     # Ensure docs directory is in directory_tree
     if "directory_tree" in data:
@@ -54,8 +58,8 @@ def pack() -> None:
 
     data["files"] = files
 
-    v149_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"[OK] Re-packed {v149_path.name} with {len(data['files'])} files.")
+    v200_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[OK] Re-packed {v200_path.name} with {len(data['files'])} files.")
 
 
 if __name__ == "__main__":

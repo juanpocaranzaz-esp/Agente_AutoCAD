@@ -13,10 +13,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
-SPEC_JSON_PATH = BASE_DIR / "especificacion_del_agente_y_mcp_autocad_2021-V1.4.9.json"
+SPEC_JSON_PATH = BASE_DIR / "especificacion_del_agente_y_mcp_autocad_2021-V2.0.0.json"
 GLOBAL_SKILL_PATH = Path(os.environ.get("GEMINI_SKILLS_PATH", Path.home() / ".gemini" / "config" / "skills" / "autolisp-developer" / "SKILL.md"))
 
-print(f"=== Running Rigorous Verification Suite on V1.4.9 ({SPEC_JSON_PATH}) ===")
+print(f"=== Running Rigorous Verification Suite on V2.0.0 ({SPEC_JSON_PATH}) ===")
 
 # Test 1: JSON RFC 8259 Validity
 assert SPEC_JSON_PATH.exists(), f"File not found: {SPEC_JSON_PATH}"
@@ -24,7 +24,7 @@ raw_json = SPEC_JSON_PATH.read_text(encoding="utf-8")
 data = json.loads(raw_json)
 print("Test 1 Passed: JSON is valid RFC 8259!")
 
-assert data["project_metadata"]["version"] == "1.4.9", "Version must be 1.4.9"
+assert data["project_metadata"]["version"] == "2.0.0", "Version must be 2.0.0"
 assert "lisp-library" in data["directory_tree"], "lisp-library must be in directory_tree"
 assert "docs" in data["directory_tree"], "docs must be in directory_tree"
 
@@ -42,7 +42,7 @@ assert "docs/estabilidad_com.md" in files_dict, "docs/estabilidad_com.md missing
 for rel_path, json_content in files_dict.items():
     disk_path = SPEC_JSON_PATH.parent / rel_path
     assert disk_path.exists(), f"Scaffolded file missing on disk: {disk_path}"
-    assert disk_path.read_text(encoding="utf-8") == json_content, f"Disk file out of sync with V1.4.9.json: {rel_path}"
+    assert disk_path.read_text(encoding="utf-8") == json_content, f"Disk file out of sync with V2.0.0.json: {rel_path}"
 print(f"Test 2 Passed: All {len(files_dict)} required files present in JSON and 100% synchronized with disk!")
 
 # Test 3: AST Parse of server.py
@@ -453,7 +453,7 @@ agents_md = files_dict["AGENTS.md"]
 memory_md = files_dict["MEMORY.md"]
 invariants_md = files_dict[".agents/rules/autocad-invariants.md"]
 
-assert "lisp-library/" in agents_md and "\\\\bashemdc\\ESTUDIO\\PROGRAMAS\\" in agents_md
+assert "lisp-library/" in agents_md and "\\\\bashemdc\\" not in agents_md, "AGENTS.md must reference lisp-library/ and exclude private UNC paths"
 assert "MTEXT" in agents_md and "WCS" in agents_md
 assert "lisp-library/" in memory_md and "WCS" in memory_md
 assert "MTEXT" in invariants_md and "World Coordinate System" in invariants_md
@@ -470,9 +470,8 @@ if GLOBAL_SKILL_PATH.exists():
     assert "pruebas" not in skill_text.lower() or "No es necesario exigir al usuario mover el archivo a una carpeta de \"pruebas\"" in skill_text, "Should eliminate manual pruebas requirement"
     assert "2-Lib_Comandos" not in skill_text, "SKILL.md must not require saving python scripts to 2-Lib_Comandos"
     assert "save_studio_learning" in skill_text, "SKILL.md must recommend save_studio_learning"
-    assert "\\\\bashemdc\\ESTUDIO\\PROGRAMAS\\" in skill_text, "SKILL.md must reference unified network path"
     assert "lisp-library/" in skill_text, "SKILL.md must reference lisp-library/"
-    print("11.1: Global SKILL.md aligned with MCP V1.4.9!")
+    print("11.1: Global SKILL.md aligned with MCP V2.0.0!")
 else:
     print("11.1: Global SKILL.md skipped (clean development environment without global install).")
 
@@ -504,8 +503,8 @@ assert (unpack_test_dir_cli / "mcp-autocad" / "server.py").exists(), "server.py 
 print("12.2: unpack_spec.py single-argument CLI successfully unpacked default specification!")
 
 
-# Test 13: V1.4.9 Extensions (Spatial BBox, Field Projection, Takeoffs, Revision Diff, Critique & Headless Plot)
-print("\n--- Testing V1.4.9 Extensions ---")
+# Test 13: Advanced Extensions (Spatial BBox, Field Projection, Takeoffs, Revision Diff, Critique & Headless Plot)
+print("\n--- Testing Advanced Headless Extensions ---")
 validate_and_format_bbox = namespace["validate_and_format_bbox"]
 filter_entities_by_bbox = namespace["filter_entities_by_bbox"]
 project_entity_fields = namespace["project_entity_fields"]
@@ -625,7 +624,7 @@ print("13.6: Headless _.-PLOT script generation and circuit breaker validation p
 # 13.7 Verify extract_drawing_info.lsp v1.4.9 symbols
 for req_sym in ["parse-bbox-csv", "pt-in-bbox-p", "calc-bulge-arc-len", "calc-bulge-seg-area", "calc-lwpoly-metrics", "MCP_BBOX", "MCP_TAKEOFF"]:
     assert req_sym in lsp_code, f"Missing v1.4.9 symbol in extract_drawing_info.lsp: {req_sym}"
-print("13.7: All v1.4.9 AutoLISP symbols verified in extract_drawing_info.lsp!")
+print("13.7: All required AutoLISP symbols verified in extract_drawing_info.lsp!")
 
 
 # Test 14: Bug Fixes (ENV-01..03, BUG-01..09) & Short-Term Improvements (1.1, 1.2, 1.3)
@@ -756,8 +755,8 @@ assert "def capture_drawing_preview(" in server_code
 print("14.7: Short-Term Improvement 1.3 (Multimodal Visual Preview capture_drawing_preview) verified!")
 
 
-# Test 15: V1.4.9 Specific Fixes & Enhancements (CORR-01 .. CORR-08)
-print("\n--- Testing V1.4.9 Enhancements (CORR-01 .. CORR-08) ---")
+# Test 15: Fixes & Enhancements (CORR-01 .. CORR-10)
+print("\n--- Testing Enhancements (CORR-01 .. CORR-10) ---")
 
 # 15.1 CORR-01: requirements.txt dependencies
 req_text = files_dict["requirements.txt"]
@@ -825,8 +824,8 @@ assert "mcp_ucs_pushed" in server_code, "CORR-06: mcp_ucs_pushed must be present
 print("15.6: CORR-06 (Idempotent UCS restoration) verified!")
 
 # 15.7 CORR-07 & CORR-08: Documentation and import hygiene
-assert "v1.4.9" in files_dict["AGENTS.md"] and "draw_primitives_batch" in files_dict["AGENTS.md"], "CORR-07: AGENTS.md must document v1.4.9"
-assert "v1.4.9" in files_dict["MEMORY.md"], "CORR-07: MEMORY.md must document v1.4.9"
+assert ("v2.0" in files_dict["AGENTS.md"] or "2.0.0" in files_dict["AGENTS.md"]) and "draw_primitives_batch" in files_dict["AGENTS.md"], "AGENTS.md must document v2.0.0"
+assert ("v2.0" in files_dict["MEMORY.md"] or "2.0.0" in files_dict["MEMORY.md"]), "MEMORY.md must document v2.0.0"
 assert server_code.count("import csv") == 1, "CORR-08: duplicate import csv must be removed"
 assert server_code.count("import json") == 1, "CORR-08: duplicate import json must be removed"
 
@@ -856,6 +855,6 @@ assert 'Join-Path $auxSrc "*"' in installer_code, "installer_gui.ps1 must copy c
 print("15.9: CORR-10 (execute_cad_live helper usage, container copy guards & installer docs inclusion) verified!")
 
 print("\n=======================================================")
-print("ALL V1.4.9 VERIFICATION SUITE TESTS PASSED 100%! ")
+print("ALL V2.0.0 VERIFICATION SUITE TESTS PASSED 100%! ")
 print("=======================================================")
 

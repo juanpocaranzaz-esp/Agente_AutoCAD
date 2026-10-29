@@ -5,7 +5,7 @@ title Instalador Agente AutoCAD 2021 MCP
 pushd "%~dp0"
 
 echo =========================================================================
-echo   Instalador Visual - Agente AutoCAD 2021 MCP (Casa / Oficina) v1.4.9
+echo   Instalador Visual - Agente AutoCAD 2021 MCP v2.0.0
 echo =========================================================================
 echo Iniciando asistente visual de configuracion...
 
