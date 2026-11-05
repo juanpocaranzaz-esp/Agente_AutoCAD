@@ -31,6 +31,9 @@ Este skill define el checklist y procedimiento obligatorio de **Control de Calid
 4. **Higiene Topológica:**
    - Si se generaron primitivas o contornos, validar la continuidad con `audit_drawing_topology` o inspección de vértices (evitando vértices duplicados o colapsados).
 
+5. **Verificación Visual Vectorial Previa:**
+   - Antes de reportar la finalización de mutaciones complejas (especialmente en tablas, esquemas o textos densos), generar un ploteo temporal en PDF (`DWG To PDF.pc3` o `capture_drawing_preview`) y convertir a PNG para auditar visualmente holguras, legibilidad y ausencia de solapamientos.
+
 ## 3. Reporte Estructurado de Conclusión
 Al finalizar la tarea, el agente incluye en su respuesta al usuario el resumen del QA integrado:
 - **Estado:** `APROBADO (PASS)` o `CORRECCIÓN APLICADA EN SESIÓN`.

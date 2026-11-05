@@ -453,6 +453,62 @@
   (list totalLen areaVal isClosed startWcs endWcs)
 )
 
+(defun calc-heavy-poly-metrics (ent ed norm / vEnt vEd pts bulges ocsPt b isClosed n i p1 p2 totalLen shoelace segSum areaVal startWcs endWcs)
+  (setq pts      nil
+        bulges   nil
+        isClosed (= (logand (if (assoc 70 ed) (cdr (assoc 70 ed)) 0) 1) 1)
+        totalLen 0.0
+        shoelace 0.0
+        segSum   0.0
+        areaVal  0.0
+        vEnt     (entnext ent))
+  (while (and vEnt (/= (cdr (assoc 0 (setq vEd (entget vEnt)))) "SEQEND"))
+    (if (= (cdr (assoc 0 vEd)) "VERTEX")
+      (progn
+        (setq ocsPt (cdr (assoc 10 vEd))
+              b     (if (assoc 42 vEd) (cdr (assoc 42 vEd)) 0.0)
+              pts   (cons ocsPt pts)
+              bulges (cons b bulges))
+      )
+    )
+    (setq vEnt (entnext vEnt))
+  )
+  (setq pts    (reverse pts)
+        bulges (reverse bulges)
+        n      (length pts))
+  (if (and (> n 2) (< (distance (car pts) (nth (1- n) pts)) 1e-5))
+    (setq isClosed T)
+  )
+  (if (> n 1)
+    (progn
+      (setq i 0)
+      (while (< i (1- n))
+        (setq p1 (nth i pts)
+              p2 (nth (1+ i) pts)
+              b  (nth i bulges)
+              totalLen (+ totalLen (calc-bulge-arc-len p1 p2 b))
+              shoelace (+ shoelace (- (* (car p1) (cadr p2)) (* (car p2) (cadr p1))))
+              segSum   (+ segSum (calc-bulge-seg-area p1 p2 b))
+              i        (1+ i))
+      )
+      (if isClosed
+        (progn
+          (setq p1 (nth (1- n) pts)
+                p2 (nth 0 pts)
+                b  (nth (1- n) bulges)
+                totalLen (+ totalLen (calc-bulge-arc-len p1 p2 b))
+                shoelace (+ shoelace (- (* (car p1) (cadr p2)) (* (car p2) (cadr p1))))
+                segSum   (+ segSum (calc-bulge-seg-area p1 p2 b)))
+          (setq areaVal (abs (+ (* 0.5 shoelace) segSum)))
+        )
+      )
+    )
+  )
+  (setq startWcs (if pts (pt-wcs-coords (car pts) norm) nil)
+        endWcs   (if pts (pt-wcs-coords (nth (1- n) pts) norm) nil))
+  (list totalLen areaVal isClosed startWcs endWcs)
+)
+
 (defun build-ssget-filter (etypeStr filterLayersRaw filterSpace / flt)
   (setq flt (list (cons 0 etypeStr)))
   (if (and filterLayersRaw (/= filterLayersRaw "") (/= filterLayersRaw "*"))
@@ -512,6 +568,7 @@
                         (csv-token-allowed-p "METRICS" filterTypes)
                         (csv-token-allowed-p "CURVES" filterTypes)
                         (csv-token-allowed-p "LWPOLYLINE" filterTypes)
+                        (csv-token-allowed-p "POLYLINE" filterTypes)
                         (csv-token-allowed-p "LINE" filterTypes)))
 
   (if (and outPath (/= outPath ""))
@@ -682,11 +739,12 @@
                     (csv-token-allowed-p "TAKEOFF" filterTypes)
                     (csv-token-allowed-p "METRICS" filterTypes)
                     (csv-token-allowed-p "CURVES" filterTypes))
-              "LINE,LWPOLYLINE,CIRCLE,ARC"
+              "LINE,LWPOLYLINE,POLYLINE,CIRCLE,ARC"
               (progn
                 (setq cTypesList nil)
                 (if (csv-token-allowed-p "LINE" filterTypes) (setq cTypesList (cons "LINE" cTypesList)))
                 (if (csv-token-allowed-p "LWPOLYLINE" filterTypes) (setq cTypesList (cons "LWPOLYLINE" cTypesList)))
+                (if (csv-token-allowed-p "POLYLINE" filterTypes) (setq cTypesList (cons "POLYLINE" cTypesList)))
                 (if (csv-token-allowed-p "CIRCLE" filterTypes) (setq cTypesList (cons "CIRCLE" cTypesList)))
                 (if (csv-token-allowed-p "ARC" filterTypes) (setq cTypesList (cons "ARC" cTypesList)))
                 (if cTypesList
@@ -697,7 +755,7 @@
                     )
                     cTypesStr
                   )
-                  "LINE,LWPOLYLINE,CIRCLE,ARC"
+                  "LINE,LWPOLYLINE,POLYLINE,CIRCLE,ARC"
                 )
               )
             )
@@ -730,8 +788,8 @@
                          pEnd (cdr (assoc 11 ed))
                          cLen (if (and cPos pEnd) (distance (pt-wcs-coords cPos nil) (pt-wcs-coords pEnd nil)) 0.0)
                          norm nil))
-                  ((= etype "LWPOLYLINE")
-                   (setq lwMetrics (calc-lwpoly-metrics ed norm)
+                  ((or (= etype "LWPOLYLINE") (= etype "POLYLINE"))
+                   (setq lwMetrics (if (= etype "LWPOLYLINE") (calc-lwpoly-metrics ed norm) (calc-heavy-poly-metrics ent ed norm))
                          cLen      (nth 0 lwMetrics)
                          cArea     (nth 1 lwMetrics)
                          cClosed   (nth 2 lwMetrics)

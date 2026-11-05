@@ -23,7 +23,7 @@ Whenever you need to inspect a drawing, check layer existence, find text labels,
 ## Funciones Avanzadas v1.4.8 (Retrocompatibles)
 - `bbox`: Ventana espacial `[xmin, ymin, xmax, ymax]` en WCS filtrada en AutoLISP antes de truncar en `limit`.
 - `fields`: Proyección de campos por entidad (ej. `["handle", "text", "pos"]`) para minimizar uso de tokens.
-- `include_takeoff` y `export_takeoff_path`: Cómputo métrico en AutoLISP puro (`LINE`, `LWPOLYLINE` con arcos/bulges, `CIRCLE`, `ARC` y BOM de bloques) exportable a `.csv` o `.xlsx`.
+- `include_takeoff` y `export_takeoff_path`: Cómputo métrico en AutoLISP puro (`LINE`, `LWPOLYLINE` con arcos/bulges, `POLYLINE` 2D pesadas con sub-entidades `VERTEX`/`SEQEND`, `CIRCLE`, `ARC` y BOM de bloques) exportable a `.csv` o `.xlsx`.
 - `compare_with_dwg`: Comparación estructural y geométrica (`diff`) contra otra revisión o backups automáticos (`"latest_backup"` / `"original_backup"`).
 - `include_critique`: Auditoría de calidad e higiene CAD (puntaje 0-100, detección de `INSUNITS`, entidades fuera de rango, uso excesivo de capa `0`, textos/bloques superpuestos y curvas de longitud cero).
 - `export_plot_path` y `plot_layout`: Exportación visual headless (`_.-PLOT` vía `accoreconsole.exe`) a `.pdf` o `.png`.

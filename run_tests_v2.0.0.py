@@ -615,16 +615,17 @@ print(f"13.5: Automated CAD critique detected {critique_res['issue_count']} issu
 
 # 13.6 Headless Plot Script Generation & Circuit Breaker compatibility
 pdf_scr = build_headless_plot_script(Path("/tmp/preview.pdf"), layout_name="Model")
-assert "_.-PLOT" in pdf_scr and "DWG To PDF.pc3" in pdf_scr and "BACKGROUNDPLOT 0" in pdf_scr
+assert "_.-PLOT" in pdf_scr and "DWG To PDF.pc3" in pdf_scr and "BACKGROUNDPLOT 0" in pdf_scr and "\n_As\n" in pdf_scr
 png_scr = build_headless_plot_script(Path("/tmp/preview.png"), layout_name="Layout1")
 assert "_.-PLOT" in png_scr and "PublishToWeb PNG.pc3" in png_scr and "Layout1" in png_scr
-validate_lisp_safety('(command "_.-PLOT" "_Yes" "Model" "DWG To PDF.pc3" "ISO full bleed A3 (420.00 x 297.00 MM)" "_Millimeters" "_Landscape" "_No" "_Extents" "_Fit" "_Center" "_Yes" "monochrome.ctb" "_Yes" "_As displayed" "preview.pdf" "_No" "_Yes")')
+validate_lisp_safety('(command "_.-PLOT" "_Yes" "Model" "DWG To PDF.pc3" "ISO full bleed A3 (420.00 x 297.00 MM)" "_Millimeters" "_Landscape" "_No" "_Extents" "_Fit" "_Center" "_Yes" "monochrome.ctb" "_Yes" "_As" "preview.pdf" "_No" "_Yes")')
 print("13.6: Headless _.-PLOT script generation and circuit breaker validation passed!")
 
-# 13.7 Verify extract_drawing_info.lsp v1.4.9 symbols
-for req_sym in ["parse-bbox-csv", "pt-in-bbox-p", "calc-bulge-arc-len", "calc-bulge-seg-area", "calc-lwpoly-metrics", "MCP_BBOX", "MCP_TAKEOFF"]:
-    assert req_sym in lsp_code, f"Missing v1.4.9 symbol in extract_drawing_info.lsp: {req_sym}"
-print("13.7: All required AutoLISP symbols verified in extract_drawing_info.lsp!")
+# 13.7 Verify extract_drawing_info.lsp v1.4.9+ symbols (including heavy 2D POLYLINE support)
+for req_sym in ["parse-bbox-csv", "pt-in-bbox-p", "calc-bulge-arc-len", "calc-bulge-seg-area", "calc-lwpoly-metrics", "calc-heavy-poly-metrics", "MCP_BBOX", "MCP_TAKEOFF"]:
+    assert req_sym in lsp_code, f"Missing symbol in extract_drawing_info.lsp: {req_sym}"
+assert "POLYLINE" in namespace["ENTITY_TYPE_NORMALIZATION"]["CURVES"] and "POLYLINE" in namespace["ENTITY_TYPE_NORMALIZATION"]["POLYLINES"]
+print("13.7: All required AutoLISP symbols and heavy POLYLINE support verified in extract_drawing_info.lsp & server.py!")
 
 
 # Test 14: Bug Fixes (ENV-01..03, BUG-01..09) & Short-Term Improvements (1.1, 1.2, 1.3)
@@ -779,7 +780,8 @@ for blc in batch_lisp_calls:
     validate_lisp_safety(blc)
 assert "abs" in files_dict["lisp-library/primitives.lsp"], "CORR-04: primitives.lsp must preserve positive Z scale"
 assert "'(210 0.0 0.0 1.0)" in files_dict["lisp-library/primitives.lsp"], "CORR-04: primitives.lsp must declare explicit WCS normal vector"
-print("15.2: CORR-02 & CORR-04 (draw_primitives_batch & primitives.lsp mirror safety) verified!")
+assert "'(67 . 0)" in files_dict["lisp-library/primitives.lsp"] and "'(410 . \"Model\")" in files_dict["lisp-library/primitives.lsp"], "primitives.lsp must enforce Model Space DXF 67/410 guard"
+print("15.2: CORR-02 & CORR-04 (draw_primitives_batch, Model Space guard & primitives.lsp mirror safety) verified!")
 
 # 15.3 CORR-03: Symmetric negative topology floor & T-junction support
 audit_topo_lsp = files_dict["lisp-library/audit_topology.lsp"]

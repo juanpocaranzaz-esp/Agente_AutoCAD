@@ -3,6 +3,8 @@
 ;;; Uses standard AutoLISP (entmake / tblsearch) without GUI ActiveX dependencies.
 
 (vl-load-com)
+(setvar "CTAB" "Model")
+(setvar "TILEMODE" 1)
 
 (defun mcp-ensure-layer (lyrName colorInt / tbl)
   (if (or (not lyrName) (= lyrName ""))
@@ -38,6 +40,8 @@
     (list
       '(0 . "LINE")
       '(100 . "AcDbEntity")
+      '(67 . 0)
+      '(410 . "Model")
       (cons 8 lyr)
       '(210 0.0 0.0 1.0)
       '(100 . "AcDbLine")
@@ -68,6 +72,8 @@
     (list
       '(0 . "CIRCLE")
       '(100 . "AcDbEntity")
+      '(67 . 0)
+      '(410 . "Model")
       (cons 8 lyr)
       '(210 0.0 0.0 1.0)
       '(100 . "AcDbCircle")
@@ -98,6 +104,8 @@
     (list
       '(0 . "ARC")
       '(100 . "AcDbEntity")
+      '(67 . 0)
+      '(410 . "Model")
       (cons 8 lyr)
       '(210 0.0 0.0 1.0)
       '(100 . "AcDbCircle")
@@ -131,6 +139,8 @@
     (list
       '(0 . "LWPOLYLINE")
       '(100 . "AcDbEntity")
+      '(67 . 0)
+      '(410 . "Model")
       (cons 8 lyr)
       '(210 0.0 0.0 1.0)
       '(100 . "AcDbPolyline")
@@ -197,6 +207,8 @@
         (list
           '(0 . "INSERT")
           '(100 . "AcDbEntity")
+          '(67 . 0)
+          '(410 . "Model")
           (cons 8 lyr)
           '(210 0.0 0.0 1.0)
           '(100 . "AcDbBlockReference")

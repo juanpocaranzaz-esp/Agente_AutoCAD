@@ -26,6 +26,7 @@ description: Mandatory AutoCAD 2021 English command, AutoLISP, coordinate system
    - For aligned/centered `TEXT` (`DXF 72 /= 0` or `DXF 73 /= 0`), use `DXF 11` for the visual insertion point.
    - Headless mutating scripts conditionally preserve the user's UCS, setting `(command "_.UCS" "_World")` only when necessary and restoring `(command "_.UCS" "_Previous")` before saving.
    - Always record entity space: DXF group 67 (`0` or absent = Model Space, `1` = Paper Space) and DXF group 410 (Layout tab name).
+   - In headless scripts intended for Model Space, explicitly enforce `(setvar "CTAB" "Model")` and `(setvar "TILEMODE" 1)`, and include `'(67 . 0)` and `'(410 . "Model")` in `entmake` DXF lists so entities are never inadvertently created in Paper Space if the DWG was last saved on a Layout tab.
 
 4. **International Non-Modal Commands:**
    - Every AutoCAD command in scripts (`.scr`) or `(command ...)` MUST use underscore `_` and hyphen `-` where applicable: `_-LAYER`, `_-INSERT`, `_-STYLE`, `_-PURGE`, `_-PLOT`, `_.ZOOM`, `_.QSAVE`, `_.AUDIT`.
@@ -44,9 +45,9 @@ description: Mandatory AutoCAD 2021 English command, AutoLISP, coordinate system
    - Console command warnings (`Unknown command`, `Invalid option keyword`) trigger an immediate error status and automatic rollback.
    - Failed headless mutations automatically roll back to the pre-mutation state using atomic replacement (`os.replace`) and clean up the temporary backup copy so no spurious `-Legacy-N` files remain.
 
-8. **Spatial BBox, Pure-AutoLISP Takeoffs, Diffing & Headless Plotting (v1.4.8):**
-   - Spatial filtering (`MCP_BBOX`) and curve metric calculations (`MCP_TAKEOFF` for `LINE`, `LWPOLYLINE` with bulge arcs, `CIRCLE`, `ARC`) execute in standard AutoLISP (`entget`) without ActiveX dependencies.
-   - Headless plotting uses international non-modal `_.-PLOT` with `FILEDIA 0`, `CMDECHO 0`, and `BACKGROUNDPLOT 0`.
+8. **Spatial BBox, Pure-AutoLISP Takeoffs, Diffing & Headless Plotting (v1.4.8+):**
+   - Spatial filtering (`MCP_BBOX`) and curve metric calculations (`MCP_TAKEOFF` for `LINE`, `LWPOLYLINE` with bulge arcs, heavy 2D `POLYLINE` with `VERTEX`/`SEQEND`, `CIRCLE`, `ARC`) execute in standard AutoLISP (`entget`/`entnext`) without ActiveX dependencies.
+   - Headless plotting uses international non-modal `_.-PLOT` with `FILEDIA 0`, `CMDECHO 0`, `BACKGROUNDPLOT 0`, and `_As` for the shade plot prompt.
 
 9. **User-Mode Restoration Invariant (FILEDIA 1):**
    - The system variable `FILEDIA` is saved in the user's Windows Registry profile (`Saved in: Registry`).

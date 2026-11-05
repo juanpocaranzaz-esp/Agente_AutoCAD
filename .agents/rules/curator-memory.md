@@ -30,6 +30,9 @@ Este archivo constituye la **guía metodológica abstracta del Subagente Curador
    - Disposiciones temporales solicitadas ad-hoc por el usuario para inspección puntual. Pertenecen exclusivamente al contexto operativo de la tarea y **NUNCA** deben consolidarse como normas topológicas en `MEMORY.md`.
 5. **Instrucciones Procedimentales de Edición y Código de LISPs:**
    - Mandatos o advertencias sobre "no borrar", "no editar", detalles de código AutoLISP o funciones auxiliares. `MEMORY.md` almacena semántica descriptiva de dibujo, no mandatos procedimentales ni código.
+6. **Criterios, Fórmulas y Recomendaciones ya Presentes en Skills o LISPs (Regla de Exclusión Estricta):**
+   - Si un estándar técnico, regla de cálculo, parámetro geométrico o recomendación ya se encuentra documentado en una Skill modular en `.agents/skills/` o implementado en una rutina LISP de `lisp-library/`, **NO SE DEBE AGREGAR NI DUPLICAR en `MEMORY.md`**. `MEMORY.md` se reserva exclusivamente para estándares globales de capas, topología espacial y convenciones transversales que no pertenezcan a ninguna skill o rutina específica.
+   - Las fórmulas algebraicas, expresiones matemáticas o ecuaciones de cálculo tampoco deben volcarse en `MEMORY.md`; residen exclusivamente en las Skills modulares correspondientes.
 
 ### C. EVALUACIÓN DE CONVENIENCIA PARA LA BIBLIOTECA LISP DEL AGENTE (`lisp-library/Agente/`) Y VINCULACIÓN EN SKILLS:
 - En cada tarea técnica concluida, el curador DEBE evaluar sistemáticamente si es conveniente generalizar la lógica desarrollada como una **rutina LISP maestra y reutilizable en la biblioteca del Agente** (`lisp-library/Agente/` y directorios autorizados en `ACAD_EXTRA_LISP_DIRS`).
@@ -41,6 +44,10 @@ Este archivo constituye la **guía metodológica abstracta del Subagente Curador
 - La actualización debe reflejarse en:
   1. **Parte 1 (Índice Rápido de Comandos):** Agregando o modificando el alias corto y descripción sintética en la categoría correspondiente.
   2. **Parte 2 (Guía Detallada de Comandos):** Documentando archivo `.lsp`, función, parámetros requeridos y modo de uso paso a paso.
+
+### E. ÁMBITO AUTÓNOMO DEL REPOSITORIO Y PROHIBICIÓN DE SINCRONIZACIÓN EXTERNA:
+- El subagente curador opera de forma 100% autónoma y exclusiva dentro del propio repositorio local y remoto del agente (`origin`).
+- Está **TERMINANTEMENTE PROHIBIDO** sincronizar, transferir, volcar, replicar o respaldar criterios, memorias, rutinas LISP o skills hacia o desde cualquier otro repositorio de agente base, plantilla o distribución externa.
 
 ---
 
@@ -54,6 +61,9 @@ Este archivo constituye la **guía metodológica abstracta del Subagente Curador
 - **Principio 6 (Consentimiento Explícito):** El curador formula y expone propuestas transparentes al usuario. Las modificaciones en `MEMORY.md` SOLO se aplican tras aprobación explícita del usuario.
 - **Principio 7 (Sincronización Git Segura):** Todo cambio en configuración, reglas, skills o bibliotecas debe confirmarse y mantenerse versionado en el repositorio.
 - **Principio 8 (Reutilización y Skills Modulares):** Modularizar las capacidades técnicas en Skills independientes con carga progresiva para mantener un contexto limpio y eficiente.
+- **Principio 9 (Exclusión Estricta de Contenidos de Skills y LISPs en `MEMORY.md`):** Si una recomendación, criterio técnico, fórmula de cálculo o parámetro ya se encuentra documentado en una Skill modular (`.agents/skills/`) o implementado en una rutina LISP (`lisp-library/`), NO se debe agregar ni duplicar en `MEMORY.md`.
+- **Principio 10 (Formulación General de Reglas de Cómputo):** Al definir criterios de exclusión o alcance en tablas de cómputo y resúmenes, formularlos como principios generales y rigurosos (ej. *"en los resúmenes y tablas de cómputo solo se computa lo expresamente mencionado y detallado en el plano"*), evitando referencias hiperespecíficas a casos puntuales aislados.
+- **Principio 11 (Desvinculación y Autonomía de Repositorio):** Toda curaduría y sincronización Git (`save_studio_learning`, `git push`) opera exclusivamente sobre el repositorio propio del agente, sin exportar ni sincronizar memorias hacia repositorios de agentes base o externos.
 
 ---
 
@@ -62,7 +72,8 @@ Este archivo constituye la **guía metodológica abstracta del Subagente Curador
 1. **Lectura de Memoria:** Leer este archivo (`.agents/rules/curator-memory.md`) y el estado actual de `MEMORY.md`.
 2. **Auditoría de Conversación:** Escanear el transcript de la sesión reciente identificando decisiones, correcciones y nuevos estándares validados.
 3. **Filtrado Estricto y Evaluación de LISPs (Agente y Usuario):**
-   - Aplicar los criterios de la Sección 1 (descartar comandos de usuario de `MEMORY.md`).
+   - Aplicar los criterios de la Sección 1 (descartar comandos de usuario y criterios ya presentes en Skills o LISPs de `MEMORY.md`).
+   - Verificar que la curaduría aplique exclusivamente al repositorio activo sin exportar ni sincronizar datos hacia agentes base o repositorios externos.
    - Auditar si el procedimiento técnico resolvió un proceso recurrente y evaluar la conveniencia de consolidarlo como rutina paramétrica en `lisp-library/Agente/`, verificando que no queden scripts temporales en la raíz de `lisp-library/`.
    - Verificar y asegurar que cualquier rutina de IA creada o modificada quede explícitamente referenciada y documentada en su Skill temática correspondiente en `.agents/skills/`.
    - Verificar y asegurar que si se crearon o modificaron rutinas interactivas de `Usuario_directo`, se actualice de inmediato `lisp-library/LISP LISTA DE COMANDOS.txt` en sus dos secciones (índice rápido y guía detallada).

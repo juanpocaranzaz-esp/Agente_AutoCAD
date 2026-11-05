@@ -1594,20 +1594,20 @@ ENTITY_TYPE_NORMALIZATION: Dict[str, List[str]] = {
     "TEXT": ["TEXT"],
     "MTEXTS": ["MTEXT"],
     "MTEXT": ["MTEXT"],
-    "CURVES": ["LINE", "LWPOLYLINE", "CIRCLE", "ARC", "CURVES"],
-    "CURVE": ["LINE", "LWPOLYLINE", "CIRCLE", "ARC", "CURVES"],
+    "CURVES": ["LINE", "LWPOLYLINE", "POLYLINE", "CIRCLE", "ARC", "CURVES"],
+    "CURVE": ["LINE", "LWPOLYLINE", "POLYLINE", "CIRCLE", "ARC", "CURVES"],
     "LINES": ["LINE", "CURVES"],
     "LINE": ["LINE", "CURVES"],
-    "POLYLINES": ["LWPOLYLINE", "CURVES"],
-    "POLYLINE": ["LWPOLYLINE", "CURVES"],
-    "LWPOLYLINES": ["LWPOLYLINE", "CURVES"],
-    "LWPOLYLINE": ["LWPOLYLINE", "CURVES"],
+    "POLYLINES": ["LWPOLYLINE", "POLYLINE", "CURVES"],
+    "POLYLINE": ["LWPOLYLINE", "POLYLINE", "CURVES"],
+    "LWPOLYLINES": ["LWPOLYLINE", "POLYLINE", "CURVES"],
+    "LWPOLYLINE": ["LWPOLYLINE", "POLYLINE", "CURVES"],
     "CIRCLES": ["CIRCLE", "CURVES"],
     "CIRCLE": ["CIRCLE", "CURVES"],
     "ARCS": ["ARC", "CURVES"],
     "ARC": ["ARC", "CURVES"],
-    "TAKEOFF": ["TAKEOFF", "LAYER", "INSERT", "BLOCK", "LINE", "LWPOLYLINE", "CIRCLE", "ARC", "CURVES"],
-    "METRICS": ["METRICS", "LAYER", "INSERT", "BLOCK", "LINE", "LWPOLYLINE", "CIRCLE", "ARC", "CURVES"],
+    "TAKEOFF": ["TAKEOFF", "LAYER", "INSERT", "BLOCK", "LINE", "LWPOLYLINE", "POLYLINE", "CIRCLE", "ARC", "CURVES"],
+    "METRICS": ["METRICS", "LAYER", "INSERT", "BLOCK", "LINE", "LWPOLYLINE", "POLYLINE", "CIRCLE", "ARC", "CURVES"],
 }
 
 
@@ -2376,7 +2376,7 @@ def build_headless_plot_script(
             "_Yes\n"
             f"{ctb_style}\n"
             "_Yes\n"
-            "_As displayed\n"
+            "_As\n"
             f'"{out_posix}"\n'
             "_No\n"
             "_Yes\n"
@@ -2602,7 +2602,7 @@ def analyze_drawing_topology(
             zero_length_entities.append({"handle": hnd, "type": etype, "layer": lyr, "pos": pos})
             continue
 
-        if etype == "LWPOLYLINE" and not closed:
+        if etype in ("LWPOLYLINE", "POLYLINE") and not closed:
             gap = _point_distance(pos, end_pos) if (pos and end_pos) else None
             is_near_closed = bool(gap is not None and gap <= near_miss_tol)
             unclosed_polylines.append({
@@ -2614,7 +2614,7 @@ def analyze_drawing_topology(
                 "is_near_closed": is_near_closed,
             })
 
-        if etype in ("LINE", "LWPOLYLINE") and not closed:
+        if etype in ("LINE", "LWPOLYLINE", "POLYLINE") and not closed:
             if isinstance(pos, (list, tuple)) and len(pos) >= 2:
                 endpoints.append({"handle": hnd, "type": etype, "layer": lyr, "end": "start", "pt": (float(pos[0]), float(pos[1]))})
             if isinstance(end_pos, (list, tuple)) and len(end_pos) >= 2:
