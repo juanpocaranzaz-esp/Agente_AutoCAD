@@ -53,3 +53,9 @@ description: Mandatory AutoCAD 2021 English command, AutoLISP, coordinate system
    - The system variable `FILEDIA` is saved in the user's Windows Registry profile (`Saved in: Registry`).
    - Because `accoreconsole.exe` shares the exact same Windows Registry profile (`<<Unnamed Profile>>`) as the AutoCAD GUI (`acad.exe`), any headless or live script that sets `FILEDIA 0` MUST unconditionally execute `(setvar "FILEDIA" 1)` immediately prior to quitting (`_.QUIT`) or finishing.
    - Leaving AutoCAD in `FILEDIA 0` is strictly forbidden across all headless tools, live tools, and user-facing LISP routines.
+
+10. **Operational Role & Subagent Delegation Invariant:**
+    - The Primary Agent acts strictly as Coordinator, Planner, and User Interface.
+    - **Drafting and Plan Updating ALWAYS by Subagents:** The primary agent is strictly prohibited from running drawing, geometry modification, entity copying/syncing, or batch-editing tools (`mutate_cad_headless`, `draw_primitives_batch`, or iterative mutation scripts) directly in the main conversation thread.
+    - Any drawing, structural update, or multi-element modification task MUST be delegated to a dedicated CAD Operator Subagent (`invoke_subagent` with persona `self`, Role="CAD Operator Subagent") as the first action upon entering execution.
+    - The primary conversation thread is reserved exclusively for read-only inspections (`inspect_cad_headless`), user alignment, and presenting validated deliverables with the integrated QA report.
