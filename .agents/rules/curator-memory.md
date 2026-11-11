@@ -49,6 +49,9 @@ Este archivo constituye la **guía metodológica abstracta del Subagente Curador
 - El subagente curador opera de forma 100% autónoma y exclusiva dentro del propio repositorio local y remoto del agente (`origin`).
 - Está **TERMINANTEMENTE PROHIBIDO** sincronizar, transferir, volcar, replicar o respaldar criterios, memorias, rutinas LISP o skills hacia o desde cualquier otro repositorio de agente base, plantilla o distribución externa.
 
+### F. SINCRONIZACIÓN GIT INMEDIATA ANTE MODIFICACIONES EN BIBLIOTECA LISP:
+- Cuando en la sesión o proceso de curaduría se creen, modifiquen o consoliden rutinas en la biblioteca LISP (`lisp-library/`, ya sea en `Agente/`, `Usuario_directo/` o el catálogo unificado `LISP LISTA DE COMANDOS.txt`), el subagente curador DEBE verificar y asegurar la sincronización obligatoria con GitHub (`git add`, `git commit`, `git pull --rebase`, `git push`) para garantizar la paridad absoluta entre las estaciones de trabajo.
+
 ---
 
 ## 2. Principios Metodológicos de Curaduría
@@ -64,6 +67,7 @@ Este archivo constituye la **guía metodológica abstracta del Subagente Curador
 - **Principio 9 (Exclusión Estricta de Contenidos de Skills y LISPs en `MEMORY.md`):** Si una recomendación, criterio técnico, fórmula de cálculo o parámetro ya se encuentra documentado en una Skill modular (`.agents/skills/`) o implementado en una rutina LISP (`lisp-library/`), NO se debe agregar ni duplicar en `MEMORY.md`.
 - **Principio 10 (Formulación General de Reglas de Cómputo):** Al definir criterios de exclusión o alcance en tablas de cómputo y resúmenes, formularlos como principios generales y rigurosos (ej. *"en los resúmenes y tablas de cómputo solo se computa lo expresamente mencionado y detallado en el plano"*), evitando referencias hiperespecíficas a casos puntuales aislados.
 - **Principio 11 (Desvinculación y Autonomía de Repositorio):** Toda curaduría y sincronización Git (`save_studio_learning`, `git push`) opera exclusivamente sobre el repositorio propio del agente, sin exportar ni sincronizar memorias hacia repositorios de agentes base o externos.
+- **Principio 12 (Push Obligatorio al Modificar Biblioteca LISP):** Siempre que en la sesión se creen, modifiquen o consoliden rutinas LISP o el catálogo unificado en `lisp-library/`, el proceso de curaduría debe asegurar y ejecutar un `git push` (`git add`, `git commit`, `git pull --rebase`, `git push`) para mantener las estaciones de trabajo actualizadas.
 
 ---
 
@@ -73,6 +77,15 @@ Este archivo constituye la **guía metodológica abstracta del Subagente Curador
 2. **Auditoría de Conversación:** Escanear el transcript de la sesión reciente identificando decisiones, correcciones y nuevos estándares validados.
 3. **Filtrado Estricto y Evaluación de LISPs (Agente y Usuario):**
    - Aplicar los criterios de la Sección 1 (descartar comandos de usuario y criterios ya presentes en Skills o LISPs de `MEMORY.md`).
+   - Auditar si el procedimiento técnico resolvió un proceso recurrente y evaluar la conveniencia de consolidarlo como rutina paramétrica en `lisp-library/Agente/`, verificando que no queden scripts temporales en la raíz de `lisp-library/`.
+   - Verificar y asegurar que cualquier rutina de IA creada o modificada quede explícitamente referenciada y documentada en su Skill temática correspondiente en `.agents/skills/`.
+   - Verificar y asegurar que si se crearon o modificaron rutinas interactivas de `Usuario_directo`, se actualice de inmediato `lisp-library/LISP LISTA DE COMANDOS.txt` en sus dos secciones (índice rápido y guía detallada).
+   - **Sincronización Git Obligatoria de Biblioteca LISP:** Si hubo cambios en `lisp-library/`, asegurar la ejecución inmediata de `git add`, `git commit`, `git pull --rebase` y `git push`.
+4. **Análisis y Formulación de Propuesta:** Redactar un análisis estructurado de lo evaluado, incluyendo propuestas de memoria para `MEMORY.md`, propuestas de rutinas para `lisp-library/Agente/`, actualizaciones requeridas en `.agents/skills/`, adiciones a `LISP LISTA DE COMANDOS.txt` y estado de la sincronización Git de la biblioteca LISP si corresponde.
+5. **Presentación Obligatoria al Usuario:** Entregar al agente principal el análisis y la propuesta para que este los exponga al usuario de forma transparente.
+6. **Aprobación Explícita Estricta:** NUNCA modificar `MEMORY.md` de manera autónoma. La llamada a `save_studio_learning(..., confirmed_by_user=True)` procede ÚNICAMENTE tras una respuesta afirmativa explícita del usuario o por su solicitud directa.
+7. **Sincronización Git de Biblioteca LISP:** Ante cualquier creación o modificación de rutinas LISP o catálogo `LISP LISTA DE COMANDOS.txt` convalidada en la sesión, ejecutar `git add`, `git commit`, `git pull --rebase` y `git push` hacia `origin main`.
+8. **Evolución:** Si el usuario corrige la propuesta durante la confirmación, el subagente debe registrar la corrección en la Sección 2 de este archivo.
    - Verificar que la curaduría aplique exclusivamente al repositorio activo sin exportar ni sincronizar datos hacia agentes base o repositorios externos.
    - Auditar si el procedimiento técnico resolvió un proceso recurrente y evaluar la conveniencia de consolidarlo como rutina paramétrica en `lisp-library/Agente/`, verificando que no queden scripts temporales en la raíz de `lisp-library/`.
    - Verificar y asegurar que cualquier rutina de IA creada o modificada quede explícitamente referenciada y documentada en su Skill temática correspondiente en `.agents/skills/`.
