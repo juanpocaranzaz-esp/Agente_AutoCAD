@@ -49,6 +49,27 @@ def pack() -> None:
                     })
                     existing_paths.add(rel_posix)
 
+    # Ensure files from .agents/skills are included
+    skills_dir = base_dir / ".agents" / "skills"
+    if skills_dir.exists() and skills_dir.is_dir():
+        for skill_file in sorted(skills_dir.glob("**/*")):
+            if skill_file.is_file():
+                rel_posix = skill_file.relative_to(base_dir).as_posix()
+                if rel_posix not in existing_paths:
+                    files.append({
+                        "path": rel_posix,
+                        "content": ""
+                    })
+                    existing_paths.add(rel_posix)
+
+    # Ensure skills directory in directory_tree
+    if "directory_tree" in data:
+        for skill_dir in sorted(skills_dir.glob("*")):
+            if skill_dir.is_dir():
+                rel_d = skill_dir.relative_to(base_dir).as_posix()
+                if rel_d not in data["directory_tree"]:
+                    data["directory_tree"].append(rel_d)
+
     for f in files:
         rel_path = f["path"]
         disk_file = base_dir / rel_path

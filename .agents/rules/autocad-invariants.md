@@ -60,3 +60,11 @@ description: Mandatory AutoCAD 2021 English command, AutoLISP, coordinate system
     - Any drawing, structural update, or multi-element modification task MUST be delegated to a dedicated CAD Operator Subagent (`invoke_subagent` with persona `self`, Role="CAD Operator Subagent") as the first action upon entering execution.
     - The primary conversation thread is reserved exclusively for read-only inspections (`inspect_cad_headless`), user alignment, and presenting validated deliverables with the integrated QA report.
     - **Mandatory Subagent Specification in `/plan`:** Whenever `/plan` is requested or a multi-step execution plan is drafted, the generated plan MUST explicitly state and structure the workflow specifying that CAD drawing, geometry modification, and DWG mutations are to be executed by a dedicated CAD Operator Subagent (`CAD Operator Subagent`), reserving the primary thread for planning, read-only inspections, user confirmation, and final QA presentation.
+
+11. **Critical Plan Interrogation & CAD Edge-Case Analysis (Pair Programming Methodology):**
+    - Before modifying DWG files or generating complex AutoLISP routines: systematically analyze edge cases typical of AutoCAD (e.g., polylines with duplicate vertices, non-orthogonal or rotated columns, L/T intersections, disconnected collinear gridlines, and block/group naming collisions).
+    - Communicate using standard AutoCAD terminology (Layers, Blocks, Groups, Polylines, Insertion Points, Bounding Boxes) and transparently question risks with the user before committing destructive changes.
+
+12. **Entity Conservation & Component Integrity Audit (Mathematical Balance):**
+    - Post-execution verification must confirm entity conservation mathematically: verify that the total drawing entity count matches expected values (`Total Initial Entities = Modified/Grouped Entities + Unaffected Entities`).
+    - Validate that every created group or structural component contains all fundamental elements (e.g., boundary polyline, identifier text, dimension text, base/insertion point, grid tag) before reporting the task done.
